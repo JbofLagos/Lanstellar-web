@@ -21,7 +21,7 @@ const Hero = () => {
         </h1>
 
         <p className="mt-4 text-gray-300 text-base sm:text-lg md:text-xl lg:text-[20px] leading-relaxed font-inter">
-          Lanstella connects asset owners, liquidity providers and asset{" "}
+          Lanstellar connects asset owners, liquidity providers and asset{" "}
           <br className="hidden md:block" />
           managers for stable coin Loans. Tokenize real-world value.
           <br className="hidden md:block" /> Unlock stable-coin liquidity.
