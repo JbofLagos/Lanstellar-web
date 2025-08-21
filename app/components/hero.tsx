@@ -22,10 +22,10 @@ const Hero = () => {
 
 
         <p className="mt-4 text-gray-300 text-base sm:text-lg md:text-xl lg:text-[20px] leading-relaxed font-inter">
-          Lanstellar connects asset owners, liquidity providers and asset{" "}
+          Lanstellar connects asset managers and {" "}
           <br className="hidden md:block" />
-         managers. Verify your assets onchain, connect with LPs  and unlock stablecoin loans
-        
+          liquidity providers for instant stablecoin loans
+
         </p>
 
         {/* Buttons */}
@@ -34,7 +34,7 @@ const Hero = () => {
             Request a Loan
           </Button>
           <Button className="bg-white h-[48px] sm:h-[56px] w-full sm:w-[190px] font-inter text-[14px] sm:text-[16px] text-black px-6 py-3 rounded-full">
-           Provide Liquidity
+            Provide Liquidity
           </Button>
         </div>
 
@@ -71,7 +71,7 @@ const Hero = () => {
             />
           </div>
           <p className="text-gray-400 text-xs sm:text-sm">
-           Trusted by leading companies around the world
+            Trusted by leading companies around the world
           </p>
         </div>
       </div>
