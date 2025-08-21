@@ -4,7 +4,7 @@ import React from "react";
 
 const Navbar = () => {
   return (
-    <div className="flex items-center justify-between h-[87px] md:px-[100px] px-10 fixed top-0 left-0 right-0 bg-[#151515]/3 backdrop-blur-[2px] z-50">
+    <div className="flex items-center justify-between h-[87px] md:px-[100px] px-4 fixed top-0 left-0 right-0 bg-[#151515]/3 backdrop-blur-[2px] z-50">
       <div className="flex items-center">
         <Image src="/logo.svg" alt="logo" width={120} height={40} />
       </div>
@@ -18,9 +18,14 @@ const Navbar = () => {
       </nav>
 
       <div>
-        <Button className="bg-white hover:bg-white/90 cursor-pointer text-black rounded-full px-6 font-inter h-[56px] w-[190px] text-[16px] font-medium">
-          Launch App
-        </Button>
+        <div className="flex gap-5 z-50">
+          <Button className="bg-white hover:bg-white/90 cursor-pointer text-black rounded-full md:px-6 font-inter md:py-6  md:text-[16px] font-medium">
+            Launch App
+          </Button>
+          <Button className="bg-purple-600 text-white hover:bg-white/90 cursor-pointer  rounded-full md:px-6 font-inter md:py-6   md:text-[16px] font-medium">
+            Schedule a Demo
+          </Button>
+        </div>
       </div>
     </div>
   );

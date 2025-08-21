@@ -16,15 +16,16 @@ const Hero = () => {
       {/* Content */}
       <div className="relative z-20 text-center max-w-3xl px-4 mt-16 sm:mt-20">
         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[64px] leading-tight md:leading-[56px] lg:leading-[72px] font-medium font-helvetica">
-          Stablecoin Lending,
+          Stablecoin Lending
           <br className="hidden sm:block" /> For Real World Assets
         </h1>
+
 
         <p className="mt-4 text-gray-300 text-base sm:text-lg md:text-xl lg:text-[20px] leading-relaxed font-inter">
           Lanstellar connects asset owners, liquidity providers and asset{" "}
           <br className="hidden md:block" />
-          managers for stable coin Loans. Tokenize real-world value.
-          <br className="hidden md:block" /> Unlock stable-coin liquidity.
+         managers. Verify your assets onchain, connect with LPs  and unlock stablecoin loans
+        
         </p>
 
         {/* Buttons */}
@@ -33,7 +34,7 @@ const Hero = () => {
             Request a Loan
           </Button>
           <Button className="bg-white h-[48px] sm:h-[56px] w-full sm:w-[190px] font-inter text-[14px] sm:text-[16px] text-black px-6 py-3 rounded-full">
-            Partner with Us
+           Provide Liquidity
           </Button>
         </div>
 
@@ -70,7 +71,7 @@ const Hero = () => {
             />
           </div>
           <p className="text-gray-400 text-xs sm:text-sm">
-            Trusted by leading crypto companies
+           Trusted by leading companies around the world
           </p>
         </div>
       </div>
