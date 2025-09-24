@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "./components/navbar";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
 import localFont from "next/font/local";
+import { Toaster } from "@/components/ui/sonner";
 
 const helvetica = localFont({
   src: [
@@ -35,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${helvetica.variable} antialiased`}>
-        <Navbar />
+        <Toaster />
         {children}
       </body>
     </html>
