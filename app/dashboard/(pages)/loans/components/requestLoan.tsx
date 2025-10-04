@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
@@ -29,60 +29,65 @@ import {
   useRequestLoan,
 } from "@/lib/hooks/use-react-query";
 import { toast } from "sonner";
+interface Asset {
+  _id: string;
+  assetTitle: string;
+  assetWorth: number | string;
+  assetCategory: string;
+}
 
-const RequestLoan = () => {
+interface LoanFormData {
+  purpose: string;
+  borrower: string;
+  assetId: string;
+  amount: string;
+  duration: number;
+  plan: number;
+  interestRate: number;
+}
+
+interface RepaymentPlan {
+  id: string;
+  installments: number;
+  percent: number;
+}
+const RequestLoan: React.FC = () => {
   const [plan, setPlan] = useState<string>("one");
-  const [purpose, setPurpose] = useState("");
-  const [assetId, setAssetId] = useState("");
-  const [amount, setAmount] = useState("");
-  const [duration, setDuration] = useState("");
-  const [borrower, setBorrower] = useState("");
+  const [purpose, setPurpose] = useState<string>("");
+  const [assetId, setAssetId] = useState<string>("");
+  const [amount, setAmount] = useState<string>("");
+  const [duration, setDuration] = useState<string>("");
+  const [borrower, setBorrower] = useState<string>("");
 
-  // ✅ React Query hooks
   const { data: rawAssets, isLoading: assetsLoading } = useAssets();
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const { mutateAsync: requestLoan, isPending: loanLoading } = useRequestLoan();
 
-  // ✅ Normalize the assets data to always be an array
-  const assets = Array.isArray(rawAssets) ? rawAssets : rawAssets?.assets || [];
+  const assets: Asset[] = Array.isArray(rawAssets)
+    ? rawAssets
+    : rawAssets?.assets || [];
 
-  // Repayment plan mapping
-  const repaymentPlans = [
+  const repaymentPlans: RepaymentPlan[] = [
     { id: "one", installments: 1, percent: 5 },
     { id: "two", installments: 2, percent: 10 },
     { id: "three", installments: 3, percent: 15 },
   ];
 
-  const resetForm = () => {
-    setPlan("one");
-    setPurpose("");
-    setAssetId("");
-    setAmount("");
-    setDuration("");
-  };
-
-  // ✅ Set borrower name when user data is loaded
   useEffect(() => {
-    if (user?.fullName) {
-      setBorrower(user.fullName);
-    }
+    if (user?.fullName) setBorrower(user.fullName);
   }, [user]);
 
-  // ✅ Calculate maximum loan amount based on selected asset
-  const getMaxLoanAmount = () => {
-    if (!assets || assets.length === 0) return 0;
+  const getMaxLoanAmount = (): number => {
     const selectedAsset = assets.find((asset) => asset._id === assetId);
-    return selectedAsset
-      ? Math.floor(Number(selectedAsset.assetWorth) * 0.3)
-      : 0;
+    if (!selectedAsset) return 0;
+    const worth = Number(selectedAsset.assetWorth);
+    return worth > 0 ? Math.floor(worth * 0.3) : 0;
   };
 
-  // ✅ Validate loan amount
-  const validateLoanAmount = (value: string) => {
+  const validateLoanAmount = (value: string): boolean => {
     const numValue = Number(value);
     const maxAmount = getMaxLoanAmount();
-
-    if (maxAmount > 0 && numValue > maxAmount) {
+    if (numValue > maxAmount && maxAmount > 0) {
       toast.error(
         `Maximum loan amount for this asset is $${maxAmount.toLocaleString()}`
       );
@@ -94,59 +99,42 @@ const RequestLoan = () => {
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setAmount(value);
+    if (assetId && value) validateLoanAmount(value);
+  };
 
-    // Validate amount if asset is selected
-    if (assetId && value) {
-      validateLoanAmount(value);
-    }
+  const resetForm = (): void => {
+    setPlan("one");
+    setPurpose("");
+    setAssetId("");
+    setAmount("");
+    setDuration("");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // ✅ Validation checks
-    if (!purpose.trim()) {
-      toast.error("Please enter the purpose of the loan");
-      return;
-    }
-
-    if (!assetId) {
-      toast.error("Please select a collateral asset");
-      return;
-    }
-
-    if (!amount || Number(amount) <= 0) {
-      toast.error("Please enter a valid loan amount");
-      return;
-    }
-
-    if (!validateLoanAmount(amount)) {
-      return;
-    }
-
-    if (!duration) {
-      toast.error("Please select a loan duration");
-      return;
-    }
-
-    if (!borrower) {
-      toast.error("User information not loaded. Please refresh and try again.");
-      return;
-    }
+    if (!purpose.trim())
+      return toast.error("Please enter the purpose of the loan");
+    if (!assetId) return toast.error("Please select a collateral asset");
+    if (!amount || Number(amount) <= 0)
+      return toast.error("Please enter a valid loan amount");
+    if (!validateLoanAmount(amount)) return;
+    if (!duration) return toast.error("Please select a loan duration");
+    if (!borrower)
+      return toast.error(
+        "User information not loaded. Please refresh and try again."
+      );
 
     const selectedPlan = repaymentPlans.find((p) => p.id === plan);
-    if (!selectedPlan) {
-      toast.error("Please select a repayment plan");
-      return;
-    }
+    if (!selectedPlan) return toast.error("Please select a repayment plan");
 
-    const formData = {
-      loanPurpose: purpose.trim(),
+    const formData: LoanFormData = {
+      purpose: purpose.trim(),
       borrower,
       assetId,
-      amount: Number(amount),
+      amount,
       duration: Number(duration),
-      paymentPlan: selectedPlan.installments,
+      plan: selectedPlan.installments,
       interestRate: selectedPlan.percent,
     };
 
@@ -155,18 +143,17 @@ const RequestLoan = () => {
       toast.success("Loan request submitted successfully!");
       resetForm();
     } catch (err) {
-      console.error("Failed to request loan:", err);
-      toast.error("Something went wrong while requesting loan.");
+      console.error("Loan request failed:", err);
+      toast.error("Something went wrong while requesting the loan.");
     }
   };
 
-  // ✅ Loading state
   if (assetsLoading || userLoading) {
     return (
       <DialogContent className="w-fit border-[4px] border-[#F8F8F8] rounded-[20px]">
         <DialogHeader>
           <DialogTitle className="text-[20px] font-semibold text-black">
-            Request loan
+            Request Loan
           </DialogTitle>
         </DialogHeader>
         <div className="flex items-center justify-center py-8">
@@ -178,15 +165,15 @@ const RequestLoan = () => {
   }
 
   return (
-    <DialogContent className="w-fit border-[4px] border-[#F8F8F8] scrollbar-hide rounded-[20px] max-h-[90vh] overflow-y-auto">
+    <DialogContent className="w-fit border-[4px] border-[#F8F8F8] rounded-[20px] scrollbar-hide max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="text-[20px] font-semibold text-black">
-          Request loan
+          Request Loan
         </DialogTitle>
       </DialogHeader>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Purpose of loan */}
+        {/* Purpose of Loan */}
         <div className="grid gap-1.5">
           <Label
             htmlFor="purpose"
@@ -199,13 +186,12 @@ const RequestLoan = () => {
             value={purpose}
             onChange={(e) => setPurpose(e.target.value)}
             placeholder="What do you need the loan for?"
-            className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333]"
+            className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5]"
             disabled={loanLoading}
-            required
           />
         </div>
 
-        {/* Select Eligible Collateral */}
+        {/* Eligible Collateral */}
         <div className="grid gap-1.5">
           <Label className="text-[13.78px] font-medium text-[#1A1A21]">
             Select Eligible Collateral <span className="text-red-500">*</span>
@@ -214,15 +200,14 @@ const RequestLoan = () => {
             value={assetId}
             onValueChange={setAssetId}
             disabled={loanLoading}
-            required
           >
-            <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333] shadow-none">
-              <SelectValue placeholder="Select asset from your list of collateral" />
+            <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5]">
+              <SelectValue placeholder="Select asset from your list" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Your Assets</SelectLabel>
-                {!assets || assets.length === 0 ? (
+                {assets.length === 0 ? (
                   <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
                     <AlertCircle className="w-4 h-4" />
                     No assets available
@@ -231,8 +216,8 @@ const RequestLoan = () => {
                   assets.map((asset) => (
                     <SelectItem key={asset._id} value={asset._id}>
                       {asset.assetTitle} - $
-                      {asset.assetWorth?.toLocaleString() || "N/A"}
-                      <span className="text-xs text-muted-foreground ml-2">
+                      {Number(asset.assetWorth).toLocaleString()}{" "}
+                      <span className="text-xs text-muted-foreground ml-1">
                         ({asset.assetCategory})
                       </span>
                     </SelectItem>
@@ -241,7 +226,7 @@ const RequestLoan = () => {
               </SelectGroup>
             </SelectContent>
           </Select>
-          {(!assets || assets.length === 0) && (
+          {assets.length === 0 && (
             <span className="text-[#ef4444] text-[11px] font-medium">
               *You need to add assets first to use as collateral
             </span>
@@ -261,17 +246,16 @@ const RequestLoan = () => {
             type="number"
             min="1"
             step="0.01"
-            max={getMaxLoanAmount() || undefined}
+            max={getMaxLoanAmount()}
             value={amount}
             onChange={handleAmountChange}
             placeholder="Enter amount ($)"
-            className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333]"
+            className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5]"
             disabled={loanLoading || !assetId}
-            required
           />
           <div className="flex flex-col gap-1">
             <span className="text-[#A19821] font-medium text-[12px]">
-              *Amount must be at max of 30% of asset value
+              *Maximum of 30% of asset value
             </span>
             {assetId && getMaxLoanAmount() > 0 && (
               <span className="text-[#10b981] font-medium text-[11px]">
@@ -281,7 +265,7 @@ const RequestLoan = () => {
           </div>
         </div>
 
-        {/* Select Loan Duration */}
+        {/* Duration */}
         <div className="grid gap-1.5">
           <Label className="text-[13.78px] font-medium text-[#1A1A21]">
             Select Loan Duration <span className="text-red-500">*</span>
@@ -290,9 +274,8 @@ const RequestLoan = () => {
             value={duration}
             onValueChange={setDuration}
             disabled={loanLoading}
-            required
           >
-            <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333] shadow-none">
+            <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5]">
               <SelectValue placeholder="Select duration" />
             </SelectTrigger>
             <SelectContent>
@@ -316,16 +299,13 @@ const RequestLoan = () => {
             value={plan}
             onValueChange={setPlan}
             className="grid grid-cols-1 gap-3 sm:grid-cols-3"
-            disabled={loanLoading}
           >
             {repaymentPlans.map((p) => (
               <label
                 key={p.id}
                 htmlFor={`plan-${p.id}`}
                 className={cn(
-                  "cursor-pointer",
-                  "block rounded-lg border bg-card text-card-foreground shadow-sm transition-all",
-                  "hover:shadow-md",
+                  "cursor-pointer block rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md",
                   plan === p.id
                     ? "border-[#5B1E9F] ring-[1px] ring-[#5B1E9F] bg-[#5B1E9F]/5"
                     : "border-muted hover:border-[#5B1E9F]/30",
@@ -338,7 +318,7 @@ const RequestLoan = () => {
                       <span className="text-xs text-muted-foreground">
                         ({p.percent}% interest)
                       </span>
-                      <div className="text-[13.78px] whitespace-nowrap font-medium">
+                      <div className="text-[13.78px] font-medium">
                         {p.installments}{" "}
                         {p.installments === 1 ? "installment" : "installments"}
                       </div>
@@ -350,28 +330,22 @@ const RequestLoan = () => {
                   id={`plan-${p.id}`}
                   value={p.id}
                   className="sr-only"
-                  disabled={loanLoading}
                 />
               </label>
             ))}
           </RadioGroup>
-          <span className="text-[#8C94A6] text-[11px] font-medium">
-            *Interest rates are calculated based on the repayment plan
-          </span>
         </div>
 
+        {/* Submit */}
         <DialogFooter className="mt-6">
           <Button
             type="submit"
-            disabled={
-              loanLoading || (assets && assets.length === 0) || !borrower
-            }
-            className="bg-gradient-to-r cursor-pointer from-[#439EFF] to-[#5B1E9F] text-white px-4 py-2 rounded-[10px] flex items-center justify-center gap-2 w-full h-[40px] disabled:opacity-50"
+            disabled={loanLoading || assets.length === 0 || !borrower}
+            className="bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] text-white rounded-[10px] w-full h-[40px] disabled:opacity-50"
           >
             {loanLoading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Submitting...
+                <Loader2 className="w-4 h-4 animate-spin" /> Submitting...
               </>
             ) : (
               "Request Loan"

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiService, ApiResponse } from "../api-service";
 
-// Generic hook for API calls with loading and error states
 export function useApi<T>(
   apiCall: () => Promise<ApiResponse<T>>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   dependencies: unknown[] = [],
   options: {
     immediate?: boolean;
@@ -57,7 +57,6 @@ export function useApi<T>(
   };
 }
 
-// Specific hooks for common operations
 export function useAssets() {
   return useApi(() => apiService.getAssets(), [], { immediate: true });
 }
@@ -70,7 +69,6 @@ export function useLoans() {
   return useApi(() => apiService.getLoans(), [], { immediate: true });
 }
 
-// Hook for mutations (POST, PUT, DELETE operations)
 export function useMutation<T, P = unknown>(
   mutationFn: (params: P) => Promise<ApiResponse<T>>,
   options: {
@@ -123,20 +121,18 @@ export function useMutation<T, P = unknown>(
   };
 }
 
-// Specific mutation hooks
 export function useCreateAsset() {
   return useMutation((formData: FormData) => apiService.createAsset(formData), {
     onSuccess: () => {
-      // Optionally refresh assets list
       window.location.reload();
     },
   });
 }
 
 export function useRequestLoan() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useMutation((loanData: any) => apiService.requestLoan(loanData), {
     onSuccess: () => {
-      // Optionally refresh loans list
       window.location.reload();
     },
   });
@@ -154,7 +150,6 @@ export function useJoinWaitlist() {
   >((data) => apiService.joinWaitlist(data));
 }
 
-// Hook for paginated data
 export function usePaginatedApi<T>(
   apiCall: (page: number, limit: number) => Promise<ApiResponse<T[]>>,
   initialPage: number = 1,

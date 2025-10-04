@@ -5,23 +5,49 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import Image from "next/image";
 import { AssetDetailsModal } from "./assets-details";
 import { useAssets } from "@/lib/hooks/use-react-query";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+
+interface Asset {
+  _id: string;
+  image: string;
+  assetTitle: string;
+  assetCategory: string;
+  verified: string;
+  assetLocation: string;
+  assetWorth: string;
+  createdAt: string;
+  status: string;
+  statusColor: string;
+}
+
+type ApiResponse = {
+  assets?: Asset[];
+  data?: Asset[];
+};
 
 interface AssetsListProps {
   sortBy: string;
 }
 
 const AssetsList = ({ sortBy }: AssetsListProps) => {
-  const { data: rawData, isLoading, error } = useAssets();
+  const {
+    data: rawData,
+    isLoading,
+    error,
+  } = useAssets() as {
+    data: ApiResponse | Asset[] | undefined;
+    isLoading: boolean;
+    error?: Error | string | null;
+  };
 
-  // ✅ Ensure assets is always an array
-  const assets = Array.isArray(rawData)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const assets: Asset[] = Array.isArray(rawData)
     ? rawData
     : rawData?.assets || rawData?.data || [];
 
-  // ✅ Memoized sorting logic
   const sortedAssets = useMemo(() => {
     if (!Array.isArray(assets)) return [];
-
     const sorted = [...assets];
     switch (sortBy) {
       case "date-desc":
@@ -61,7 +87,6 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
     }
   }, [assets, sortBy]);
 
-  // ✅ Loading state
   if (isLoading) {
     return (
       <div className="p-[26px] flex items-center justify-center">
@@ -73,7 +98,6 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
     );
   }
 
-  // ✅ Error state
   if (error) {
     return (
       <div className="p-[26px] flex items-center justify-center">
@@ -95,7 +119,6 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
     );
   }
 
-  // ✅ If still not array, show warning
   if (!Array.isArray(assets)) {
     return (
       <div className="p-[26px] text-center text-yellow-600">
@@ -104,7 +127,29 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
     );
   }
 
-  // ✅ Main display
+  // ✅ Conditional Rendering
+  if (sortedAssets.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 h-screen">
+        <Image
+          src="/empty.svg"
+          alt="Empty"
+          width={215}
+          height={142}
+          className="w-[215px] h-[142.01px]"
+        />
+        <h2 className="text-[20px] font-semibold">Assets</h2>
+        <p className="text-[13.78px] text-[#8C94A6] font-medium">
+          You haven’t added any asset! Add one and get started.
+        </p>
+        <Button className="bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] text-white px-4 py-2 rounded-[10px] flex items-center gap-2">
+          <Plus />
+          Add Asset
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="p-[26px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mx-auto gap-6">
       {sortedAssets.map((asset) => (
@@ -119,7 +164,6 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
                   height={100}
                   className="w-full rounded-[10px] h-[204px] object-cover"
                 />
-
                 <div className="flex flex-row items-center justify-between gap-2">
                   <span className="text-[#8C94A6] capitalize font-medium text-[12.06px]">
                     {asset.assetCategory}
@@ -134,7 +178,6 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
                     {asset.verified === "true" ? "Verified ✅" : "In Review ⏳"}
                   </span>
                 </div>
-
                 <div className="flex flex-col gap-1">
                   <h2 className="text-[13.78px] font-semibold">
                     {asset.assetTitle}
@@ -150,7 +193,6 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
             </Card>
           </DialogTrigger>
 
-          {/* ✅ Dialog width fixed to 3/4 screen */}
           <DialogContent className="!max-w-[90vw] w-[75vw] h-[90vh] scrollbar-hide overflow-y-auto">
             <AssetDetailsModal asset={asset} />
           </DialogContent>

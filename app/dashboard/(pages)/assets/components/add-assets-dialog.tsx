@@ -142,24 +142,20 @@ const AddAssetsDialog = () => {
       form.append("assetWorth", formData.assetWorth.trim());
       form.append("assetLocation", formData.assetLocation.trim());
       form.append("assetDescription", formData.assetDescription.trim());
-
-      // Append file if selected
       if (media) {
         form.append("media", media);
       }
 
       await createAsset(form);
       resetForm();
-      setOpen(false); // Close dialog
+      setOpen(false);
     } catch (err) {
-      // Error handling is done in the hook
       console.error("Failed to create asset:", err);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {/* Button that opens the dialog */}
       <DialogTrigger asChild>
         <Button className="cursor-pointer bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] text-white px-4 py-2 rounded-[10px] flex items-center gap-2">
           <Plus />
@@ -167,7 +163,6 @@ const AddAssetsDialog = () => {
         </Button>
       </DialogTrigger>
 
-      {/* The form lives inside the dialog content */}
       <DialogContent className="w-fit border-[4px] border-[#F8F8F8] rounded-[20px] h-[90vh] overflow-y-auto scrollbar-hide">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -268,7 +263,6 @@ const AddAssetsDialog = () => {
               />
             </div>
 
-            {/* Description */}
             <div className="grid gap-1.5">
               <Label
                 htmlFor="assetDescription"
