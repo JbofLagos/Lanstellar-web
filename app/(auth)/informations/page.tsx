@@ -16,20 +16,22 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { toast } from "sonner";
+import api from "@/lib/api";
 
 export default function LanstellarForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    companyName: "",
-    companyEmail: "",
-    companyAddress: "",
+    fullName: "",
+    email: "",
+    address: "",
     country: "",
-    companyContact: "",
+    contact: "",
     registrationCert: null as File | null,
     companyCac: null as File | null,
     financialReport: null as File | null,
   });
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -45,14 +47,39 @@ export default function LanstellarForm() {
     }
   };
 
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+
+      const form = new FormData();
+      form.append("fullName", formData.fullName);
+      form.append("email", formData.email);
+      form.append("address", formData.address);
+      form.append("country", formData.country);
+      form.append("contact", formData.contact);
+
+      const res = await api.put("/auth/update-user", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      console.log(res);
+      toast.success("Profile updated successfully!");
+      setFormData(res.data.user);
+    } catch (err) {
+      console.error("Failed to update user:", err);
+      toast.error("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className=" bg-white font-inter justify-center relative items-center flex flex-col ">
+    <div className=" bg-white font-inter justify-center relative items-center flex flex-col py-10 ">
       <div className="w-full max-w-md">
         <div className="self-start ml-[20px] z-50 mt-[10px] top-0 left-0 absolute">
           <Image src={"/logo3.svg"} height={48} width={174} alt="logo" />
         </div>
 
-        <div className="flex items-center gap-2 w-10/12 mx-auto mb-8">
+        <div className="flex items-center gap-2 w-10/12 mx-auto m-6">
           <div className="flex items-center gap-2">
             <div
               className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${
@@ -92,7 +119,7 @@ export default function LanstellarForm() {
           </div>
         </div>
 
-        <div className="space-y-2 flex justify-center flex-col px-[40px] py-4 bg-white border-4 border-[#F4F3F7]  rounded-[20px] h-auto w-[502px] max-w-full">
+        <div className="space-y-2 flex justify-center flex-col px-[25px] py-4 bg-white border-4 border-[#F4F3F7]  rounded-[20px] h-auto w-[502px] max-w-full">
           {currentStep === 1 && (
             <div className="space-y-3">
               <div>
@@ -105,10 +132,10 @@ export default function LanstellarForm() {
               </div>
 
               <div className="space-y-4">
-                <div className=" flex flex-row items-center justify-between gap-4">
+                <div className=" flex flex-row items-center gap-2.5">
                   <div className="bg-[#F4F3F7] h-[80px] w-[80px] rounded-full"></div>
                   <div className=" flex gap-5 align-start">
-                    <Button className="mt-2 bg-white border border-[#F1F1F1] w-[118px] h-[40px] rounded-[10px] text-[#8C94A6] px-4 flex items-center justify-center">
+                    <Button className="mt-2 bg-white border border-[#F1F1F1] text-[12px] hover:bg-white/90 cursor-pointer w-[118px] h-[40px] rounded-[10px] text-[#8C94A6] px-4 flex items-center justify-center">
                       <Image
                         src="/icons/export.png"
                         alt="Upload"
@@ -127,63 +154,61 @@ export default function LanstellarForm() {
                       />
                       Upload Logo
                     </Button>
-                    <Button className="mt-2 bg-white border border-[#F1F1F1] w-[65px] h-[40px] rounded-[10px] text-[#8C94A6]">
+                    <Button className="mt-2 bg-white border border-[#F1F1F1] text-[12px] hover:bg-white/90 cursor-pointer w-[65px] h-[40px] rounded-[10px] text-[#8C94A6]">
                       Remove
                     </Button>
                   </div>
                 </div>
                 <div>
                   <Label
-                    htmlFor="companyName"
+                    htmlFor="fullName"
                     className="text-[13px] font-medium text-[1A1A1A] "
                   >
                     Company name
                   </Label>
                   <Input
-                    id="companyName"
+                    id="fullName"
                     placeholder="What's your company name?"
-                    value={formData.companyName}
+                    value={formData.fullName}
                     onChange={(e) =>
-                      handleInputChange("companyName", e.target.value)
+                      handleInputChange("fullName", e.target.value)
                     }
-                    className="mt-1 bg-[#F5F5F5] border border-[#F5F5F5] text-[#CBCBCB] text-[13px] rounded-[10px] h-[37px] w-full"
+                    className="mt-1 bg-[#F5F5F5] border border-[#F5F5F5] text-[#1a1a1a] text-[13px] rounded-[10px] h-[37px] w-full"
                   />
                 </div>
 
                 <div>
                   <Label
-                    htmlFor="companyEmail"
+                    htmlFor="email"
                     className="text-[13px] font-medium text-[1A1A1A] "
                   >
                     Company email
                   </Label>
                   <Input
-                    id="companyEmail"
+                    id="email"
                     type="email"
                     placeholder="What’s your company email"
-                    value={formData.companyEmail}
-                    onChange={(e) =>
-                      handleInputChange("companyEmail", e.target.value)
-                    }
-                    className="mt-1 bg-[#F5F5F5] border border-[#F5F5F5] text-[#CBCBCB] text-[13px] rounded-[10px] h-[37px] w-full"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className="mt-1 bg-[#F5F5F5] border border-[#F5F5F5] text-[#1a1a1a] text-[13px] rounded-[10px] h-[37px] w-full"
                   />
                 </div>
 
                 <div>
                   <Label
-                    htmlFor="companyAddress"
+                    htmlFor="address"
                     className="text-[13px] font-medium text-[1A1A1A] "
                   >
                     Company address
                   </Label>
                   <Input
-                    id="companyAddress"
+                    id="address"
                     placeholder="What's your company address?"
-                    value={formData.companyAddress}
+                    value={formData.address}
                     onChange={(e) =>
-                      handleInputChange("companyAddress", e.target.value)
+                      handleInputChange("address", e.target.value)
                     }
-                    className="mt-1 bg-[#F5F5F5] border border-[#F5F5F5] text-[#CBCBCB] text-[13px] rounded-[10px] h-[37px] w-full"
+                    className="mt-1 bg-[#F5F5F5] border border-[#F5F5F5] text-[#1a1a1a] text-[13px] rounded-[10px] h-[37px] w-full"
                   />
                 </div>
 
@@ -199,7 +224,7 @@ export default function LanstellarForm() {
                       handleInputChange("country", value)
                     }
                   >
-                    <SelectTrigger className="mt-1 bg-[#F5F5F5] border border-[#F5F5F5] text-[#CBCBCB] text-[13px] rounded-[10px] h-[37px] w-full">
+                    <SelectTrigger className="mt-1 bg-[#F5F5F5] border border-[#F5F5F5] text-[#1a1a1a] text-[13px] rounded-[10px] h-[37px] w-full">
                       <SelectValue placeholder="Select your location" />
                     </SelectTrigger>
                     <SelectContent>
@@ -215,26 +240,26 @@ export default function LanstellarForm() {
 
                 <div>
                   <Label
-                    htmlFor="companyContact"
+                    htmlFor="contact"
                     className="text-[13px] font-medium text-[1A1A1A] "
                   >
                     Company contact
                   </Label>
                   <Input
-                    id="companyContact"
+                    id="contact"
                     placeholder="What's your company phone number?"
-                    value={formData.companyContact}
+                    value={formData.contact}
                     onChange={(e) =>
-                      handleInputChange("companyContact", e.target.value)
+                      handleInputChange("contact", e.target.value)
                     }
-                    className="mt-1 bg-[#F5F5F5] border border-[#F5F5F5] text-[#CBCBCB] text-[13px] rounded-[10px] h-[37px] w-full"
+                    className="mt-1 bg-[#F5F5F5] border border-[#F5F5F5] text-[#1a1a1a] text-[13px] rounded-[10px] h-[37px] w-full"
                   />
                 </div>
               </div>
 
               <Button
                 onClick={handleContinue}
-                className="w-full bg-gradient-to-br from-[#439EFF] to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90 text-white"
+                className="w-full bg-gradient-to-br from-[#439EFF] cursor-pointer to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90 text-white"
               >
                 Continue
               </Button>
@@ -275,11 +300,14 @@ export default function LanstellarForm() {
                   }
                 />
               </div>
-              <Link href="/dashboard">
-                <Button className="w-full bg-gradient-to-br from-[#439EFF] to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90  text-white">
-                  Continue
-                </Button>
-              </Link>
+
+              <Button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full bg-gradient-to-br cursor-pointer from-[#439EFF] to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90  text-white"
+              >
+                {loading ? "Submitting..." : "Submit"}
+              </Button>
             </div>
           )}
         </div>

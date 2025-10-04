@@ -14,8 +14,7 @@ const RegisterPage = () => {
     name: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    userType: "",
+    userType: "borrower",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,10 +30,6 @@ const RegisterPage = () => {
     e.preventDefault();
     setError("");
 
-    if (form.password !== form.confirmPassword) {
-      return setError("Passwords do not match");
-    }
-
     setLoading(true);
     try {
       const res = await api.post("/auth/register", {
@@ -43,12 +38,11 @@ const RegisterPage = () => {
         password: form.password,
         userType: form.userType,
       });
-
+      console.log(res);
       const { token, user } = res.data;
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-
-      router.push("/dashboard");
+      router.push("/informations");
     } catch (err: unknown) {
       console.error("Registration failed:", err);
       if (axios.isAxiosError(err)) {
@@ -64,11 +58,11 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="h-screen bg-[url('/heropatern.svg')] font-inter justify-center relative items-center flex flex-col bg-white bg-center bg-cover">
+    <div className="h-screen bg-[url('/heropatern.svg')] bg-white/70 bg-blend-overlay font-inter justify-center relative items-center flex flex-col bg-center bg-cover">
       <div className="self-start ml-[20px] z-50 mt-[10px] top-0 left-0 absolute">
         <Image src={"/logo3.svg"} height={48} width={174} alt="logo" />
       </div>
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center items-center ">
         <div className="space-y-5 flex justify-center flex-col p-[30px] bg-[#FCFCFC] border border-[#E4E3EC] border-dashed rounded-[20px] min-h-[520px] w-[543px]">
           <div>
             <h2 className="font-inter font-semibold text-[20px]">
@@ -81,14 +75,14 @@ const RegisterPage = () => {
           <form className="flex flex-col gap-4 mt-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1">
               <Label className="text-[#1A1A21] text-[13.78px] font-medium">
-                Full Name
+                Company Name
               </Label>
               <Input
                 type="text"
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                placeholder="Enter your full name"
+                placeholder="Enter your company name"
                 required
                 className="bg-[#F5F5F5] border border-[#F1F1F1] rounded-[10px] text-[#1A1A1A] placeholder:text-[#CBCBCB] shadow-none p-3 h-12 outline-none"
               />
@@ -96,20 +90,20 @@ const RegisterPage = () => {
 
             <div className="flex flex-col gap-1">
               <Label className="text-[#1A1A21] text-[13.78px] font-medium">
-                Email
+                Company Email
               </Label>
               <Input
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                placeholder="Enter your email"
+                placeholder="Enter your company email"
                 required
                 className="bg-[#F5F5F5] border border-[#F1F1F1] rounded-[10px] text-[#1A1A1A] placeholder:text-[#CBCBCB] shadow-none p-3 h-12 outline-none"
               />
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className=" flex-col gap-1 hidden">
               <Label className="text-[#1A1A21] text-[13.78px] font-medium">
                 User Type
               </Label>
@@ -148,21 +142,6 @@ const RegisterPage = () => {
                   {showPassword ? "hide" : "show"}
                 </button>
               </div>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <Label className="text-[#1A1A21] text-[13.78px] font-medium">
-                Confirm Password
-              </Label>
-              <Input
-                type={showPassword ? "text" : "password"}
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                placeholder="Re-enter password"
-                required
-                className="bg-[#F5F5F5] border border-[#F1F1F1] rounded-[10px] text-[#1A1A1A] placeholder:text-[#CBCBCB] p-3 h-12 outline-none"
-              />
             </div>
 
             {error && (

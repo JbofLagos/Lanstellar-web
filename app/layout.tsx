@@ -8,6 +8,7 @@ const inter = Inter({
 });
 import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/lib/query-client";
 
 const helvetica = localFont({
   src: [
@@ -35,8 +36,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${helvetica.variable} antialiased`}>
-        <Toaster />
-        {children}
+        <QueryProvider>
+          <Toaster />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

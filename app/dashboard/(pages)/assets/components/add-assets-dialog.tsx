@@ -22,11 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Plus, X, ImageIcon } from "lucide-react";
-import Image from "next/image";
-import api from "@/lib/api";
+import { Plus, X, ImageIcon } from "lucide-react";
+import { useCreateAsset } from "@/lib/hooks/use-react-query";
 import { toast } from "sonner";
-import axios from "axios";
 
 interface AssetForm {
   assetTitle: string;
@@ -39,7 +37,6 @@ interface AssetForm {
 const AddAssetsDialog = () => {
   const [media, setMedia] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<AssetForm>({
     assetTitle: "",
@@ -48,6 +45,8 @@ const AddAssetsDialog = () => {
     assetLocation: "",
     assetDescription: "",
   });
+
+  const { mutate: createAsset, isPending } = useCreateAsset();
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -134,8 +133,6 @@ const AddAssetsDialog = () => {
     }
 
     try {
-      setLoading(true);
-
       // Create FormData for multipart/form-data request
       const form = new FormData();
 
@@ -151,34 +148,12 @@ const AddAssetsDialog = () => {
         form.append("media", media);
       }
 
-      const response = await api.post("/assets/create-asset", form, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (response.data?.success) {
-        toast.success(response.data?.message || "Asset created successfully!");
-        resetForm();
-        setOpen(false); // Close dialog
-        window.location.reload(); // Reload to show new asset
-      } else {
-        throw new Error(response.data?.message || "Failed to create asset");
-      }
-    } catch (err: unknown) {
+      await createAsset(form);
+      resetForm();
+      setOpen(false); // Close dialog
+    } catch (err) {
+      // Error handling is done in the hook
       console.error("Failed to create asset:", err);
-
-      if (axios.isAxiosError(err)) {
-        const message = (err.response?.data as { message?: string } | undefined)
-          ?.message;
-        toast.error(message ?? "Failed to add asset. Please try again.");
-      } else if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("Failed to add asset. Please try again.");
-      }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -390,17 +365,17 @@ const AddAssetsDialog = () => {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={loading}
+              disabled={isPending}
               className="mr-2"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] cursor-pointer text-white px-4 py-2 rounded-[10px] flex items-center gap-2"
             >
-              {loading ? "Adding..." : "Add Asset"}
+              {isPending ? "Adding..." : "Add Asset"}
             </Button>
           </DialogFooter>
         </form>

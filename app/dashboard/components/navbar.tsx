@@ -81,7 +81,7 @@ const Navbar = () => {
             <div className="">
               <button
                 onClick={handleConnectWallet}
-                className="bg-gradient-to-r from-[#468FF7] to-[#844CCB] p-[1px] h-[28px] w-[100px] cursor-pointer text-white font-inter font-medium text-xs flex justify-center items-center rounded-full"
+                className="bg-gradient-to-r from-[#468FF7] to-[#844CCB] cursor-pointer p-[1px] h-[28px] w-[100px] cursor-pointer text-white font-inter font-medium text-xs flex justify-center items-center rounded-full"
               >
                 Connect Wallet
               </button>

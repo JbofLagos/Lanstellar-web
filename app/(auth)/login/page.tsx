@@ -10,22 +10,30 @@ const Page = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
       const res = await api.post("/auth/login", { email, password });
-      saveToken(res.data.data.token); // save token
-      window.location.href = "/dashboard"; // redirect to dashboard
+      const result = res.data.data.user;
+      console.log(result);
+      saveToken(res.data.data.token);
+      window.location.href = "/dashboard";
+      console.log(result);
+      setEmail("");
+      setPassword("");
+      setLoading(false);
     } catch (err) {
       console.error("Login failed:", err);
     }
   };
 
   return (
-    <div className="h-screen bg-[url('/heropatern.svg')] font-inter justify-center relative items-center flex flex-col bg-white  bg-center bg-cover">
+    <div className="h-screen bg-[url('/heropatern.svg')] bg-white/70 bg-blend-overlay font-inter justify-center relative items-center flex flex-col bg-center bg-cover">
       <div className=" self-start ml-[20px] z-50 mt-[10px] top-0 left-0 absolute">
         <Image src={"/logo3.svg"} height={48} width={174} alt="logo" />
       </div>

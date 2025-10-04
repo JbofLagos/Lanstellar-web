@@ -23,30 +23,28 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import api from "@/lib/api";
+import {
+  useAssets,
+  useCurrentUser,
+  useRequestLoan,
+} from "@/lib/hooks/use-react-query";
 import { toast } from "sonner";
-import axios from "axios";
-import { getCurrentUser } from "@/lib/auth";
-
-interface Asset {
-  _id: string;
-  assetTitle: string;
-  assetWorth: number;
-  assetCategory: string;
-  assetLocation: string;
-}
 
 const RequestLoan = () => {
   const [plan, setPlan] = useState<string>("one");
   const [purpose, setPurpose] = useState("");
   const [assetId, setAssetId] = useState("");
-  const [assets, setAssets] = useState<Asset[]>([]);
   const [amount, setAmount] = useState("");
   const [duration, setDuration] = useState("");
   const [borrower, setBorrower] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [assetsLoading, setAssetsLoading] = useState(true);
-  const [userLoading, setUserLoading] = useState(true);
+
+  // ✅ React Query hooks
+  const { data: rawAssets, isLoading: assetsLoading } = useAssets();
+  const { data: user, isLoading: userLoading } = useCurrentUser();
+  const { mutateAsync: requestLoan, isPending: loanLoading } = useRequestLoan();
+
+  // ✅ Normalize the assets data to always be an array
+  const assets = Array.isArray(rawAssets) ? rawAssets : rawAssets?.assets || [];
 
   // Repayment plan mapping
   const repaymentPlans = [
@@ -63,68 +61,23 @@ const RequestLoan = () => {
     setDuration("");
   };
 
-  const fetchAssets = async () => {
-    try {
-      setAssetsLoading(true);
-      const response = await api.get("/assets/");
-      console.log("Fetched assets:", response.data);
-
-      // Handle different response structures
-      const assetsData =
-        response.data?.assets || response.data?.data || response.data || [];
-
-      // Ensure we have an array
-      if (Array.isArray(assetsData)) {
-        setAssets(assetsData);
-      } else if (assetsData && typeof assetsData === "object") {
-        // If it's a single asset object, wrap in array
-        setAssets([assetsData]);
-      } else {
-        console.warn("Unexpected assets data format:", assetsData);
-        setAssets([]);
-      }
-    } catch (error) {
-      console.error("Error fetching assets:", error);
-      toast.error("Failed to load your assets");
-      setAssets([]);
-    } finally {
-      setAssetsLoading(false);
-    }
-  };
-
-  const fetchUser = async () => {
-    try {
-      setUserLoading(true);
-      const data = await getCurrentUser();
-      console.log("Current user:", data);
-
-      // Handle different response structures
-      const userId = data?.data?.user?._id || data?.user?._id || data?._id;
-
-      if (userId) {
-        setBorrower(userId);
-      } else {
-        throw new Error("User ID not found");
-      }
-    } catch (err) {
-      console.error("Failed to fetch user:", err);
-      toast.error("Failed to load user information");
-    } finally {
-      setUserLoading(false);
-    }
-  };
-
+  // ✅ Set borrower name when user data is loaded
   useEffect(() => {
-    fetchAssets();
-    fetchUser();
-  }, []);
+    if (user?.fullName) {
+      setBorrower(user.fullName);
+    }
+  }, [user]);
 
-  // Calculate maximum loan amount based on selected asset
+  // ✅ Calculate maximum loan amount based on selected asset
   const getMaxLoanAmount = () => {
+    if (!assets || assets.length === 0) return 0;
     const selectedAsset = assets.find((asset) => asset._id === assetId);
-    return selectedAsset ? Math.floor(selectedAsset.assetWorth * 0.3) : 0;
+    return selectedAsset
+      ? Math.floor(Number(selectedAsset.assetWorth) * 0.3)
+      : 0;
   };
 
+  // ✅ Validate loan amount
   const validateLoanAmount = (value: string) => {
     const numValue = Number(value);
     const maxAmount = getMaxLoanAmount();
@@ -151,7 +104,7 @@ const RequestLoan = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Validation
+    // ✅ Validation checks
     if (!purpose.trim()) {
       toast.error("Please enter the purpose of the loan");
       return;
@@ -189,8 +142,8 @@ const RequestLoan = () => {
 
     const formData = {
       loanPurpose: purpose.trim(),
-      borrower: borrower,
-      assetId: assetId,
+      borrower,
+      assetId,
       amount: Number(amount),
       duration: Number(duration),
       paymentPlan: selectedPlan.installments,
@@ -198,261 +151,235 @@ const RequestLoan = () => {
     };
 
     try {
-      setLoading(true);
-
-      const response = await api.post("/loan/", formData);
-
-      if (response.data?.success) {
-        toast.success(
-          response.data?.message || "Loan request submitted successfully!"
-        );
-        console.log("Loan request response:", response.data);
-        resetForm();
-        window.location.reload();
-      } else {
-        throw new Error(response.data?.message || "Failed to request loan");
-      }
-    } catch (err: unknown) {
+      await requestLoan(formData);
+      toast.success("Loan request submitted successfully!");
+      resetForm();
+    } catch (err) {
       console.error("Failed to request loan:", err);
-
-      if (axios.isAxiosError(err)) {
-        const message = (err.response?.data as { message?: string } | undefined)
-          ?.message;
-        toast.error(message ?? "Failed to request loan. Please try again.");
-      } else if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("Something went wrong, please try again.");
-      }
-    } finally {
-      setLoading(false);
+      toast.error("Something went wrong while requesting loan.");
     }
   };
 
-  // Show loading state while fetching initial data
+  // ✅ Loading state
   if (assetsLoading || userLoading) {
     return (
-      <div>
-        <DialogContent className="w-fit border-[4px] border-[#F8F8F8] rounded-[20px]">
-          <DialogHeader>
-            <DialogTitle className="text-[20px] font-semibold text-black">
-              Request loan
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            <span>Loading your information...</span>
-          </div>
-        </DialogContent>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <DialogContent className="w-fit border-[4px] border-[#F8F8F8] scrollbar-hide rounded-[20px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-fit border-[4px] border-[#F8F8F8] rounded-[20px]">
         <DialogHeader>
           <DialogTitle className="text-[20px] font-semibold text-black">
             Request loan
           </DialogTitle>
         </DialogHeader>
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <span>Loading your information...</span>
+        </div>
+      </DialogContent>
+    );
+  }
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Purpose of loan */}
-          <div className="grid gap-1.5">
-            <Label
-              htmlFor="purpose"
-              className="text-[13.78px] font-medium text-[#1A1A21]"
-            >
-              Purpose of loan <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="purpose"
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              placeholder="What do you need the loan for?"
-              className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333]"
-              disabled={loading}
-              required
-            />
-          </div>
+  return (
+    <DialogContent className="w-fit border-[4px] border-[#F8F8F8] scrollbar-hide rounded-[20px] max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="text-[20px] font-semibold text-black">
+          Request loan
+        </DialogTitle>
+      </DialogHeader>
 
-          {/* Select Eligible Collateral */}
-          <div className="grid gap-1.5">
-            <Label className="text-[13.78px] font-medium text-[#1A1A21]">
-              Select Eligible Collateral <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={assetId}
-              onValueChange={setAssetId}
-              disabled={loading}
-              required
-            >
-              <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333] shadow-none">
-                <SelectValue placeholder="Select asset from your list of collateral" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Your Assets</SelectLabel>
-                  {assets.length === 0 ? (
-                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-                      <AlertCircle className="w-4 h-4" />
-                      No assets available
-                    </div>
-                  ) : (
-                    assets.map((asset) => (
-                      <SelectItem key={asset._id} value={asset._id}>
-                        {asset.assetTitle} - $
-                        {asset.assetWorth?.toLocaleString() || "N/A"}
-                        <span className="text-xs text-muted-foreground ml-2">
-                          ({asset.assetCategory})
-                        </span>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            {assets.length === 0 && (
-              <span className="text-[#ef4444] text-[11px] font-medium">
-                *You need to add assets first to use as collateral
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Purpose of loan */}
+        <div className="grid gap-1.5">
+          <Label
+            htmlFor="purpose"
+            className="text-[13.78px] font-medium text-[#1A1A21]"
+          >
+            Purpose of loan <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="purpose"
+            value={purpose}
+            onChange={(e) => setPurpose(e.target.value)}
+            placeholder="What do you need the loan for?"
+            className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333]"
+            disabled={loanLoading}
+            required
+          />
+        </div>
+
+        {/* Select Eligible Collateral */}
+        <div className="grid gap-1.5">
+          <Label className="text-[13.78px] font-medium text-[#1A1A21]">
+            Select Eligible Collateral <span className="text-red-500">*</span>
+          </Label>
+          <Select
+            value={assetId}
+            onValueChange={setAssetId}
+            disabled={loanLoading}
+            required
+          >
+            <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333] shadow-none">
+              <SelectValue placeholder="Select asset from your list of collateral" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Your Assets</SelectLabel>
+                {!assets || assets.length === 0 ? (
+                  <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                    <AlertCircle className="w-4 h-4" />
+                    No assets available
+                  </div>
+                ) : (
+                  assets.map((asset) => (
+                    <SelectItem key={asset._id} value={asset._id}>
+                      {asset.assetTitle} - $
+                      {asset.assetWorth?.toLocaleString() || "N/A"}
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({asset.assetCategory})
+                      </span>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          {(!assets || assets.length === 0) && (
+            <span className="text-[#ef4444] text-[11px] font-medium">
+              *You need to add assets first to use as collateral
+            </span>
+          )}
+        </div>
+
+        {/* Amount Needed */}
+        <div className="grid gap-1.5">
+          <Label
+            htmlFor="amount"
+            className="text-[13.78px] font-medium text-[#1A1A21]"
+          >
+            Amount Needed <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="amount"
+            type="number"
+            min="1"
+            step="0.01"
+            max={getMaxLoanAmount() || undefined}
+            value={amount}
+            onChange={handleAmountChange}
+            placeholder="Enter amount ($)"
+            className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333]"
+            disabled={loanLoading || !assetId}
+            required
+          />
+          <div className="flex flex-col gap-1">
+            <span className="text-[#A19821] font-medium text-[12px]">
+              *Amount must be at max of 30% of asset value
+            </span>
+            {assetId && getMaxLoanAmount() > 0 && (
+              <span className="text-[#10b981] font-medium text-[11px]">
+                Maximum available: ${getMaxLoanAmount().toLocaleString()}
               </span>
             )}
           </div>
+        </div>
 
-          {/* Amount Needed */}
-          <div className="grid gap-1.5">
-            <Label
-              htmlFor="amount"
-              className="text-[13.78px] font-medium text-[#1A1A21]"
-            >
-              Amount Needed <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="amount"
-              type="number"
-              min="1"
-              step="0.01"
-              max={getMaxLoanAmount() || undefined}
-              value={amount}
-              onChange={handleAmountChange}
-              placeholder="Enter amount ($)"
-              className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333]"
-              disabled={loading || !assetId}
-              required
-            />
-            <div className="flex flex-col gap-1">
-              <span className="text-[#A19821] font-medium text-[12px]">
-                *Amount must be at max of 30% of asset value
-              </span>
-              {assetId && getMaxLoanAmount() > 0 && (
-                <span className="text-[#10b981] font-medium text-[11px]">
-                  Maximum available: ${getMaxLoanAmount().toLocaleString()}
-                </span>
-              )}
-            </div>
-          </div>
+        {/* Select Loan Duration */}
+        <div className="grid gap-1.5">
+          <Label className="text-[13.78px] font-medium text-[#1A1A21]">
+            Select Loan Duration <span className="text-red-500">*</span>
+          </Label>
+          <Select
+            value={duration}
+            onValueChange={setDuration}
+            disabled={loanLoading}
+            required
+          >
+            <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333] shadow-none">
+              <SelectValue placeholder="Select duration" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Duration</SelectLabel>
+                <SelectItem value="3">3 Months</SelectItem>
+                <SelectItem value="6">6 Months</SelectItem>
+                <SelectItem value="12">12 Months</SelectItem>
+                <SelectItem value="24">24 Months</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
 
-          {/* Select Loan Duration */}
-          <div className="grid gap-1.5">
-            <Label className="text-[13.78px] font-medium text-[#1A1A21]">
-              Select Loan Duration <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={duration}
-              onValueChange={setDuration}
-              disabled={loading}
-              required
-            >
-              <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333] shadow-none">
-                <SelectValue placeholder="Select duration" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Duration</SelectLabel>
-                  <SelectItem value="3">3 Months</SelectItem>
-                  <SelectItem value="6">6 Months</SelectItem>
-                  <SelectItem value="12">12 Months</SelectItem>
-                  <SelectItem value="24">24 Months</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Repayment plan picker */}
-          <div className="grid gap-1.5">
-            <Label className="text-[13.78px] font-medium text-[#1A1A21]">
-              Select Repayment Plan <span className="text-red-500">*</span>
-            </Label>
-            <RadioGroup
-              value={plan}
-              onValueChange={setPlan}
-              className="grid grid-cols-1 gap-3 sm:grid-cols-3"
-              disabled={loading}
-            >
-              {repaymentPlans.map((p) => (
-                <label
-                  key={p.id}
-                  htmlFor={`plan-${p.id}`}
-                  className={cn(
-                    "cursor-pointer",
-                    "block rounded-lg border bg-card text-card-foreground shadow-sm transition-all",
-                    "hover:shadow-md",
-                    plan === p.id
-                      ? "border-[#5B1E9F] ring-[1px] ring-[#5B1E9F] bg-[#5B1E9F]/5"
-                      : "border-muted hover:border-[#5B1E9F]/30",
-                    loading && "opacity-50 cursor-not-allowed"
-                  )}
-                >
-                  <Card className="border-0 bg-transparent shadow-none h-[64px] w-[112px] p-0">
-                    <CardContent className="flex h-full w-full items-center justify-center p-0">
-                      <div className="flex flex-col items-center justify-center text-center">
-                        <span className="text-xs text-muted-foreground">
-                          ({p.percent}% interest)
-                        </span>
-                        <div className="text-[13.78px] whitespace-nowrap font-medium">
-                          {p.installments}{" "}
-                          {p.installments === 1
-                            ? "installment"
-                            : "installments"}
-                        </div>
+        {/* Repayment Plan */}
+        <div className="grid gap-1.5">
+          <Label className="text-[13.78px] font-medium text-[#1A1A21]">
+            Select Repayment Plan <span className="text-red-500">*</span>
+          </Label>
+          <RadioGroup
+            value={plan}
+            onValueChange={setPlan}
+            className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+            disabled={loanLoading}
+          >
+            {repaymentPlans.map((p) => (
+              <label
+                key={p.id}
+                htmlFor={`plan-${p.id}`}
+                className={cn(
+                  "cursor-pointer",
+                  "block rounded-lg border bg-card text-card-foreground shadow-sm transition-all",
+                  "hover:shadow-md",
+                  plan === p.id
+                    ? "border-[#5B1E9F] ring-[1px] ring-[#5B1E9F] bg-[#5B1E9F]/5"
+                    : "border-muted hover:border-[#5B1E9F]/30",
+                  loanLoading && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <Card className="border-0 bg-transparent shadow-none h-[64px] w-[112px] p-0">
+                  <CardContent className="flex h-full w-full items-center justify-center p-0">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <span className="text-xs text-muted-foreground">
+                        ({p.percent}% interest)
+                      </span>
+                      <div className="text-[13.78px] whitespace-nowrap font-medium">
+                        {p.installments}{" "}
+                        {p.installments === 1 ? "installment" : "installments"}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                  <RadioGroupItem
-                    id={`plan-${p.id}`}
-                    value={p.id}
-                    className="sr-only"
-                    disabled={loading}
-                  />
-                </label>
-              ))}
-            </RadioGroup>
-            <span className="text-[#8C94A6] text-[11px] font-medium">
-              *Interest rates are calculated based on the repayment plan
-            </span>
-          </div>
+                <RadioGroupItem
+                  id={`plan-${p.id}`}
+                  value={p.id}
+                  className="sr-only"
+                  disabled={loanLoading}
+                />
+              </label>
+            ))}
+          </RadioGroup>
+          <span className="text-[#8C94A6] text-[11px] font-medium">
+            *Interest rates are calculated based on the repayment plan
+          </span>
+        </div>
 
-          <DialogFooter className="mt-6">
-            <Button
-              type="submit"
-              disabled={loading || assets.length === 0 || !borrower}
-              className="bg-gradient-to-r cursor-pointer from-[#439EFF] to-[#5B1E9F] text-white px-4 py-2 rounded-[10px] flex items-center justify-center gap-2 w-full h-[40px] disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Request Loan"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </div>
+        <DialogFooter className="mt-6">
+          <Button
+            type="submit"
+            disabled={
+              loanLoading || (assets && assets.length === 0) || !borrower
+            }
+            className="bg-gradient-to-r cursor-pointer from-[#439EFF] to-[#5B1E9F] text-white px-4 py-2 rounded-[10px] flex items-center justify-center gap-2 w-full h-[40px] disabled:opacity-50"
+          >
+            {loanLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Request Loan"
+            )}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
   );
 };
 

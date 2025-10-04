@@ -25,7 +25,7 @@ const Navbar = () => {
       </nav>
 
       <div className="md:gap-5 gap-2 flex">
-        <Link href={"/signup"}>
+        <Link href={"/user-selection"}>
           <Button className="bg-white mr-2 hover:bg-white/90 cursor-pointer text-black rounded-full px-2 font-inter md:h-[56px] h-[40px]  md:w-[190px] w-[150px] md:text-[16px] text-[14px] font-medium">
             Launch App
           </Button>

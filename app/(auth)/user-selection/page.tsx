@@ -4,22 +4,29 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
   const [selected, setSelected] = useState<"asset" | "liquidity" | null>(null);
+  const router = useRouter();
 
   const handleSelect = (type: "asset" | "liquidity") => {
     setSelected(type);
   };
 
-  const handleContinue = () => {
-    if (!selected) return; // Prevent continue without selection
-    console.log("Selected:", selected);
-    // redirect or store in context / state management
+  const handleContinue = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selected) return;
+
+    if (selected === "asset") {
+      router.push("/signup");
+    } else {
+      router.push("/liquidity-informations");
+    }
   };
 
   return (
-    <div className="h-screen bg-[url('/heropatern.svg')] font-inter justify-center relative items-center flex flex-col bg-white bg-center bg-cover">
+    <div className="h-screen bg-[url('/heropatern.svg')] bg-white/70 bg-blend-overlay font-inter justify-center relative items-center flex flex-col bg-center bg-cover">
       {/* Logo */}
       <div className="self-start ml-[20px] z-50 mt-[10px] top-0 left-0 absolute">
         <Image src={"/logo3.svg"} height={48} width={174} alt="logo" />
@@ -50,7 +57,12 @@ const Page = () => {
                     : "bg-[#F4F3F7]"
                 }`}
               >
-                <div className="w-full md:w-[420px] h-[190px] rounded-[18px] bg-white p-[24px] flex flex-col gap-2">
+                <div
+                  className={`w-full md:w-[420px] h-[190px] rounded-[18px]  p-[24px] flex flex-col gap-2 ${
+                    selected === "asset" ? "bg-[#F2F7FF]" : "bg-white"
+                  }
+                  `}
+                >
                   <img
                     src="/mananger.png"
                     alt=""
@@ -75,7 +87,11 @@ const Page = () => {
                     : "bg-[#F4F3F7]"
                 }`}
               >
-                <div className="w-full md:w-[420px] h-[190px] rounded-[18px] bg-white p-[24px] flex flex-col gap-2">
+                <div
+                  className={`w-full md:w-[420px] h-[190px] rounded-[18px]  p-[24px] flex flex-col gap-2
+                  ${selected === "liquidity" ? "bg-[#F2F7FF]" : "bg-white"}
+                  `}
+                >
                   <img
                     src="/provider.png"
                     alt=""
@@ -106,17 +122,15 @@ const Page = () => {
                   Go Back
                 </Button>
               </Link>
-              <Link href={"/informations"}>
-                <Button
-                  onClick={handleContinue}
-                  disabled={!selected}
-                  className={`bg-gradient-to-br from-[#439EFF] to-[#5B1E9F] text-white text-[13.78px] py-2 px-[20px] rounded-md font-medium hover:opacity-90 transition-opacity mt-2 cursor-pointer ${
-                    !selected ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Continue
-                </Button>
-              </Link>
+              <Button
+                onClick={handleContinue}
+                disabled={!selected}
+                className={`bg-gradient-to-br from-[#439EFF] to-[#5B1E9F] text-white text-[13.78px] py-2 px-[20px] rounded-md font-medium hover:opacity-90 transition-opacity mt-2 cursor-pointer ${
+                  !selected ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                Continue
+              </Button>
             </div>
           </form>
         </div>

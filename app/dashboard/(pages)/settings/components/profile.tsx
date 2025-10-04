@@ -44,7 +44,7 @@ export function Profile() {
   });
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null); // ✅ keep actual file
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field: keyof UserForm, value: string) => {
