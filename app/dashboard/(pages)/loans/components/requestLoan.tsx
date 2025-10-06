@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -41,8 +42,8 @@ interface LoanFormData {
   borrower: string;
   assetId: string;
   amount: string;
-  duration: number;
-  plan: number;
+  duration: string;
+  plan: string;
   interestRate: number;
 }
 
@@ -63,9 +64,10 @@ const RequestLoan: React.FC = () => {
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const { mutateAsync: requestLoan, isPending: loanLoading } = useRequestLoan();
 
-  const assets: Asset[] = Array.isArray(rawAssets)
-    ? rawAssets
-    : rawAssets?.assets || [];
+  const rawAssetsData = rawAssets as any;
+  const assets: Asset[] = Array.isArray(rawAssetsData)
+    ? rawAssetsData
+    : rawAssetsData?.assets || [];
 
   const repaymentPlans: RepaymentPlan[] = [
     { id: "one", installments: 1, percent: 5 },
@@ -74,9 +76,8 @@ const RequestLoan: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (user?.fullName) setBorrower(user.fullName);
+    setBorrower((user as any)?.data?.user._id || "");
   }, [user]);
-
   const getMaxLoanAmount = (): number => {
     const selectedAsset = assets.find((asset) => asset._id === assetId);
     if (!selectedAsset) return 0;
@@ -133,8 +134,8 @@ const RequestLoan: React.FC = () => {
       borrower,
       assetId,
       amount,
-      duration: Number(duration),
-      plan: selectedPlan.installments,
+      duration,
+      plan: selectedPlan.installments.toString(),
       interestRate: selectedPlan.percent,
     };
 
@@ -142,6 +143,7 @@ const RequestLoan: React.FC = () => {
       await requestLoan(formData);
       toast.success("Loan request submitted successfully!");
       resetForm();
+      window.location.reload();
     } catch (err) {
       console.error("Loan request failed:", err);
       toast.error("Something went wrong while requesting the loan.");

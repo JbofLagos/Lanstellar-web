@@ -182,8 +182,8 @@ export function useLogin() {
       apiService.login(credentials),
     onSuccess: (data) => {
       // Store token
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+      if (data.data?.token) {
+        localStorage.setItem("token", data.data.token);
       }
       toast.success("Login successful!");
     },
@@ -203,8 +203,8 @@ export function useRegister() {
     }) => apiService.register(userData),
     onSuccess: (data) => {
       // Store token
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+      if (data.data?.token) {
+        localStorage.setItem("token", data.data.token);
       }
       toast.success("Account created successfully!");
     },

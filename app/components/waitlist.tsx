@@ -39,6 +39,7 @@ const Waitlist = () => {
           telegramUsername: telegramUsername,
         });
         console.log("Waitlist submission response:", res.data);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         console.info("Waitlist submission", {
           fullName,

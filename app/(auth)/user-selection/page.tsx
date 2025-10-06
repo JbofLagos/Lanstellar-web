@@ -17,123 +17,118 @@ const Page = () => {
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected) return;
-
-    if (selected === "asset") {
-      router.push("/signup");
-    } else {
-      router.push("/liquidity-informations");
-    }
+    router.push(selected === "asset" ? "/signup" : "/liquidity-informations");
   };
 
   return (
-    <div className="h-screen bg-[url('/heropatern.svg')] bg-white/70 bg-blend-overlay font-inter justify-center relative items-center flex flex-col bg-center bg-cover">
+    <div className="min-h-screen bg-[url('/heropatern.svg')] bg-white/80 bg-blend-overlay font-inter flex flex-col justify-center items-center bg-center bg-cover px-4 sm:px-6 md:px-10">
       {/* Logo */}
-      <div className="self-start ml-[20px] z-50 mt-[10px] top-0 left-0 absolute">
-        <Image src={"/logo3.svg"} height={48} width={174} alt="logo" />
+      <div className="absolute top-4 left-4">
+        <Image src={"/logo3.svg"} height={40} width={150} alt="logo" />
       </div>
 
       {/* Card Container */}
-      <div className="flex justify-center items-center">
-        <div className="space-y-5 flex justify-center flex-col px-[40px] py-[80px] bg-[#FCFCFC] border border-[#E4E3EC] border-dashed rounded-[20px] h-auto w-[968px] max-w-full">
-          {/* Heading */}
-          <div>
-            <h2 className="font-inter font-semibold text-[20px]">
-              How would you describe yourself? 🤔
-            </h2>
-            <p className="text-[#8C94A6] text-[13px] font-medium">
-              Select the type of account you want to create. This helps us
-              tailor your experience.
-            </p>
+      <div className="w-full max-w-[980px] bg-[#FCFCFC] border border-[#E4E3EC] border-dashed rounded-[20px] p-6 sm:p-10 md:p-16 space-y-6">
+        {/* Heading */}
+        <div className="text-center md:text-left">
+          <h2 className="font-semibold text-lg sm:text-xl md:text-2xl">
+            How would you describe yourself? 🤔
+          </h2>
+          <p className="text-[#8C94A6] text-sm sm:text-[13px] font-medium mt-1">
+            Select the type of account you want to create. This helps us tailor
+            your experience.
+          </p>
+        </div>
+
+        {/* Selection Cards */}
+        <form className="flex flex-col gap-6">
+          <div className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-6 w-full">
+            {/* Asset Manager */}
+            <div
+              onClick={() => handleSelect("asset")}
+              className={`rounded-[20px] p-[4px] w-full md:w-1/2 cursor-pointer transition-all ${
+                selected === "asset"
+                  ? "bg-gradient-to-br from-[#439EFF] to-[#5B1E9F]"
+                  : "bg-[#F4F3F7]"
+              }`}
+            >
+              <div
+                className={`rounded-[18px] p-6 flex flex-col gap-3 h-full ${
+                  selected === "asset" ? "bg-[#F2F7FF]" : "bg-white"
+                }`}
+              >
+                <img
+                  src="/mananger.png"
+                  alt="Asset Manager"
+                  className="h-[50px] w-[50px] object-contain"
+                />
+                <h2 className="text-black font-semibold text-lg sm:text-xl">
+                  Asset manager
+                </h2>
+                <p className="text-[#8C94A6] text-sm sm:text-[13px] leading-relaxed">
+                  Owned by businesses and organizations who need stable loans in
+                  minutes.
+                </p>
+              </div>
+            </div>
+
+            {/* Liquidity Provider */}
+            <div
+              onClick={() => handleSelect("liquidity")}
+              className={`rounded-[20px] p-[4px] w-full md:w-1/2 cursor-pointer transition-all ${
+                selected === "liquidity"
+                  ? "bg-gradient-to-br from-[#439EFF] to-[#5B1E9F]"
+                  : "bg-[#F4F3F7]"
+              }`}
+            >
+              <div
+                className={`rounded-[18px] p-6 flex flex-col gap-3 h-full ${
+                  selected === "liquidity" ? "bg-[#F2F7FF]" : "bg-white"
+                }`}
+              >
+                <img
+                  src="/provider.png"
+                  alt="Liquidity Provider"
+                  className="h-[50px] w-[50px] object-contain"
+                />
+                <h2 className="text-black font-semibold text-lg sm:text-xl">
+                  Liquidity provider
+                </h2>
+                <p className="text-[#8C94A6] text-sm sm:text-[13px] leading-relaxed">
+                  Provide liquidity in stablecoins and earn predictable yields
+                  from loans backed by real-world assets.
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Selection Cards */}
-          <form className="gap-4 mt-4 flex flex-col justify-between ">
-            <div className=" flex flex-col md:flex-row justify-center items-center gap-6">
-              <div
-                onClick={() => handleSelect("asset")}
-                className={`rounded-[20px] p-[4px] cursor-pointer transition-all ${
-                  selected === "asset"
-                    ? "bg-gradient-to-br from-[#439EFF] to-[#5B1E9F]"
-                    : "bg-[#F4F3F7]"
-                }`}
-              >
-                <div
-                  className={`w-full md:w-[420px] h-[190px] rounded-[18px]  p-[24px] flex flex-col gap-2 ${
-                    selected === "asset" ? "bg-[#F2F7FF]" : "bg-white"
-                  }
-                  `}
-                >
-                  <img
-                    src="/mananger.png"
-                    alt=""
-                    className="h-[60px] w-[60px]"
-                  />
-                  <h2 className="text-black font-semibold text-[20px]">
-                    Asset manager
-                  </h2>
-                  <p className="text-[#8C94A6] text-[13px] font-medium">
-                    Owned by businesses and organizations who need stable loans
-                    in minutes
-                  </p>
-                </div>
-              </div>
-
-              {/* Liquidity Provider */}
-              <div
-                onClick={() => handleSelect("liquidity")}
-                className={`rounded-[20px] p-[4px] cursor-pointer transition-all ${
-                  selected === "liquidity"
-                    ? "bg-gradient-to-br from-[#439EFF] to-[#5B1E9F]"
-                    : "bg-[#F4F3F7]"
-                }`}
-              >
-                <div
-                  className={`w-full md:w-[420px] h-[190px] rounded-[18px]  p-[24px] flex flex-col gap-2
-                  ${selected === "liquidity" ? "bg-[#F2F7FF]" : "bg-white"}
-                  `}
-                >
-                  <img
-                    src="/provider.png"
-                    alt=""
-                    className="h-[60px] w-[60px]"
-                  />
-                  <h2 className="text-black font-semibold text-[20px]">
-                    Liquidity provider
-                  </h2>
-                  <p className="text-[#8C94A6] text-[13px] font-medium">
-                    Provide liquidity in stablecoins and earn predictable yields
-                    from loans backed by real-world assets.
-                  </p>
-                </div>
-              </div>
-            </div>
-            {/* Actions */}
-            <div className="flex flex-row justify-between gap-6 mt-10">
-              <Link href={"/login"}>
-                <Button
-                  variant={"outline"}
-                  className="py-2 shadow-none text-[13.78px] rounded-md font-medium hover:opacity-90 transition-opacity mt-2 cursor-pointer flex items-center gap-2"
-                >
-                  <img
-                    src="/icons/arrow-left.svg"
-                    alt=""
-                    className="h-[20px] w-[20px]"
-                  />
-                  Go Back
-                </Button>
-              </Link>
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-6 mt-8">
+            <Link href={"/login"} className="w-full sm:w-auto">
               <Button
-                onClick={handleContinue}
-                disabled={!selected}
-                className={`bg-gradient-to-br from-[#439EFF] to-[#5B1E9F] text-white text-[13.78px] py-2 px-[20px] rounded-md font-medium hover:opacity-90 transition-opacity mt-2 cursor-pointer ${
-                  !selected ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                variant={"outline"}
+                className="w-full sm:w-auto py-2 shadow-none text-sm rounded-md font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
               >
-                Continue
+                <img
+                  src="/icons/arrow-left.svg"
+                  alt=""
+                  className="h-[20px] w-[20px]"
+                />
+                Go Back
               </Button>
-            </div>
-          </form>
-        </div>
+            </Link>
+
+            <Button
+              onClick={handleContinue}
+              disabled={!selected}
+              className={`w-full sm:w-auto bg-gradient-to-br from-[#439EFF] to-[#5B1E9F] text-white text-sm py-2 px-6 rounded-md font-medium hover:opacity-90 transition-opacity ${
+                !selected ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              Continue
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );
