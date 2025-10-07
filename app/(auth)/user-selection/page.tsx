@@ -28,7 +28,7 @@ const Page = () => {
       </div>
 
       {/* Card Container */}
-      <div className="w-full max-w-[980px] mt-10 bg-[#FCFCFC] border border-[#E4E3EC] border-dashed rounded-[20px] p-6 sm:p-10 md:p-16 space-y-6">
+      <div className="w-full max-w-[980px] mt-20 bg-[#FCFCFC] border border-[#E4E3EC] border-dashed rounded-[20px] p-6 sm:p-10 md:p-16 space-y-6">
         {/* Heading */}
         <div className="text-center md:text-left">
           <h2 className="font-semibold text-lg sm:text-xl md:text-2xl">
