@@ -16,8 +16,8 @@ const Hero = () => {
       />
 
       {/* Content */}
-      <div className="relative z-20 text-center max-w-3xl px-4 mt-16 sm:mt-20">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[64px] leading-tight md:leading-[56px] lg:leading-[72px] font-medium font-helvetica">
+      <div className="relative z-20 text-center max-w-3xl px-4 mt-5 space-y-7 sm:mt-20 ">
+        <h1 className="text-4xl md:text-5xl lg:text-[64px] leading-tight md:leading-[56px] lg:leading-[72px] font-medium font-helvetica">
           Stablecoin Lending,
           <br className="hidden sm:block" /> For Real World Assets
         </h1>
@@ -29,7 +29,7 @@ const Hero = () => {
         </p>
 
         {/* Buttons */}
-        <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
+        <div className="mt-6 flex flex-row justify-center items-center gap-3 sm:gap-4">
           <a
             href="https://calendly.com/femiadegolu/30min?month=2024-05"
             target="_blank"
@@ -40,7 +40,7 @@ const Hero = () => {
             </Button>
           </a>
           <Link href="#waitlist">
-            <Button className="bg-white m-2 hover:bg-white/90 cursor-pointer text-black rounded-full px-2 font-inter md:h-[56px] h-[40px]  md:w-[190px] w-[150px] md:text-[16px] text-[14px] font-medium">
+            <Button className="h-[48px] sm:h-[56px] w-full sm:w-[190px] font-inter text-[14px] sm:text-[16px] bg-white m-2 hover:bg-white/90 cursor-pointer text-black px-6 py-3 rounded-full">
               <Zap fill="#000000" />
               Join the Waitlist
             </Button>
@@ -48,40 +48,42 @@ const Hero = () => {
         </div>
 
         {/* Trusted by */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-          <div className="-space-x-2 flex items-center">
-            <Image
-              src="/lisk.png"
-              alt="crypto"
-              width={28}
-              height={28}
-              className="rounded-full sm:w-8 sm:h-8"
-            />
-            <Image
-              src="/base.png"
-              alt="crypto"
-              width={28}
-              height={28}
-              className="rounded-full sm:w-8 sm:h-8"
-            />
-            <Image
-              src="/moonriver.png"
-              alt="crypto"
-              width={28}
-              height={28}
-              className="rounded-full sm:w-8 sm:h-8 bg-white"
-            />
-            <Image
-              src="/moonbeam.png"
-              alt="crypto"
-              width={28}
-              height={28}
-              className="rounded-full sm:w-8 sm:h-8"
-            />
+        <div className="">
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+            <div className="-space-x-2 flex items-center">
+              <Image
+                src="/lisk.png"
+                alt="crypto"
+                width={28}
+                height={28}
+                className="rounded-full sm:w-8 sm:h-8"
+              />
+              <Image
+                src="/base.png"
+                alt="crypto"
+                width={28}
+                height={28}
+                className="rounded-full sm:w-8 sm:h-8"
+              />
+              <Image
+                src="/moonriver.png"
+                alt="crypto"
+                width={28}
+                height={28}
+                className="rounded-full sm:w-8 sm:h-8 bg-white"
+              />
+              <Image
+                src="/moonbeam.png"
+                alt="crypto"
+                width={28}
+                height={28}
+                className="rounded-full sm:w-8 sm:h-8"
+              />
+            </div>
+            <p className="text-gray-400 text-xs sm:text-sm">
+              Trusted by leading crypto companies
+            </p>
           </div>
-          <p className="text-gray-400 text-xs sm:text-sm">
-            Trusted by leading crypto companies
-          </p>
         </div>
       </div>
 
