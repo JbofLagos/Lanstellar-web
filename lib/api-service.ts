@@ -217,6 +217,14 @@ class ApiService {
     });
   }
 
+  async deleteLoan(id: string): Promise<ApiResponse<unknown>> {
+    return this.request<unknown>("DELETE", `/loan/${id}`, undefined, {
+      showErrorToast: true,
+      showSuccessToast: true,
+      successMessage: "Asset deleted successfully!",
+    });
+  }
+
   async getLoans(): Promise<ApiResponse<unknown[]>> {
     return this.request<unknown[]>("GET", "/loans/", undefined, {
       showErrorToast: true,

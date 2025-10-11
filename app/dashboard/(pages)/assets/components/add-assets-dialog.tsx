@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, X, ImageIcon } from "lucide-react";
+import { Plus, X, ImageIcon, File } from "lucide-react";
 import { useCreateAsset } from "@/lib/hooks/use-react-query";
 import { toast } from "sonner";
 
@@ -37,6 +37,7 @@ interface AssetForm {
 const AddAssetsDialog = () => {
   const [media, setMedia] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [assetDocs, setAssetDocs] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<AssetForm>({
     assetTitle: "",
@@ -52,43 +53,67 @@ const AddAssetsDialog = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleDocsSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] || null;
     if (selectedFile) {
-      // Validate file type
-      if (
-        !["image/png", "image/jpeg", "image/jpg"].includes(selectedFile.type)
-      ) {
-        toast.error("We only support PNGs and JPEGs");
+      if (!["image/png", "image/jpeg"].includes(selectedFile.type)) {
+        toast.error("We only support PNG and JPEG");
         return;
       }
-
-      // Validate file size (10MB)
       if (selectedFile.size > 10 * 1024 * 1024) {
         toast.error("File size must be under 10MB");
         return;
       }
-
       setMedia(selectedFile);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setPreviewUrl(URL.createObjectURL(selectedFile));
+    }
+  };
 
-      // Create preview URL for images
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(selectedFile);
+  const handleDocumentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0] || null;
+    if (selectedFile) {
+      if (
+        ![
+          "application/pdf",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ].includes(selectedFile.type)
+      ) {
+        toast.error("We only support PDFs and DOC/DOCX");
+        return;
+      }
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        toast.error("File size must be under 10MB");
+        return;
+      }
+      setAssetDocs(selectedFile);
     }
   };
 
   const removeFile = () => {
     setMedia(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
     setPreviewUrl(null);
-    // Reset the file input
     const fileInput = document.getElementById(
       "file-upload"
     ) as HTMLInputElement;
     if (fileInput) {
       fileInput.value = "";
+    }
+  };
+
+  const removeDocument = () => {
+    setAssetDocs(null);
+    const docInput = document.getElementById(
+      "document-upload"
+    ) as HTMLInputElement;
+    if (docInput) {
+      docInput.value = "";
     }
   };
 
@@ -101,13 +126,22 @@ const AddAssetsDialog = () => {
       assetDescription: "",
     });
     setMedia(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
     setPreviewUrl(null);
-    // Reset the file input
+    setAssetDocs(null);
     const fileInput = document.getElementById(
       "file-upload"
     ) as HTMLInputElement;
     if (fileInput) {
       fileInput.value = "";
+    }
+    const docInput = document.getElementById(
+      "document-upload"
+    ) as HTMLInputElement;
+    if (docInput) {
+      docInput.value = "";
     }
   };
 
@@ -133,7 +167,6 @@ const AddAssetsDialog = () => {
     }
 
     try {
-      // Create FormData for multipart/form-data request
       const form = new FormData();
 
       // Append all form fields
@@ -145,12 +178,17 @@ const AddAssetsDialog = () => {
       if (media) {
         form.append("media", media);
       }
+      if (assetDocs) {
+        form.append("assetDocs", assetDocs);
+      }
 
       await createAsset(form);
       resetForm();
+      toast.success("Asset added successfully");
       setOpen(false);
     } catch (err) {
       console.error("Failed to create asset:", err);
+      toast.error("Failed to add asset");
     }
   };
 
@@ -283,21 +321,15 @@ const AddAssetsDialog = () => {
             {/* File Upload */}
             <div className="grid">
               <Label className="text-sm font-medium text-[#1A1A21] mb-2 block">
-                Assets Documents
+                Assets Image
               </Label>
-
-              {/* Show preview if file is selected */}
               {media && previewUrl ? (
                 <Card className="border border-[#F1F1F1] bg-white shadow-none">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
-                          <img
-                            src={previewUrl}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                          />
+                        <div className="relative p-2 rounded-md overflow-hidden bg-[#563BB5]/20">
+                          <ImageIcon className="w-5 h-5 text-[#563BB5]" />
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
@@ -326,7 +358,7 @@ const AddAssetsDialog = () => {
                     <input
                       type="file"
                       accept=".png,.jpg,.jpeg"
-                      onChange={handleDocsSelect}
+                      onChange={handleImageSelect}
                       className="hidden"
                       id="file-upload"
                     />
@@ -350,6 +382,70 @@ const AddAssetsDialog = () => {
 
               <p className="text-[12px] font-medium text-[#8C94A6] mt-1">
                 *We only support PNGs and JPEG under 10MB
+              </p>
+            </div>
+            <div className="grid">
+              <Label className="text-sm font-medium text-[#1A1A21] mb-2 block">
+                Assets Documents
+              </Label>
+              {assetDocs ? (
+                <Card className="border border-[#F1F1F1] bg-white shadow-none">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="relative p-2 rounded-md overflow-hidden bg-[#563BB5]/20">
+                          <File className="w-5 h-5 text-[#563BB5]" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                            {assetDocs.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {(assetDocs.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={removeDocument}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border border-dashed border-[#F1F1F1] bg-white h-[86px] shadow-none flex flex-col justify-center items-center">
+                  <CardContent className="p-4 flex flex-col justify-center items-center w-full">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleDocumentSelect}
+                      className="hidden"
+                      id="document-upload"
+                    />
+                    <label
+                      htmlFor="document-upload"
+                      className="cursor-pointer w-full flex flex-col items-center justify-center text-center"
+                    >
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <File className="w-7 h-7 text-gray-400" />
+                        <p className="text-[13px] text-gray-600 leading-snug">
+                          Drag your Document here or{" "}
+                          <span className="text-[#563BB5] font-medium">
+                            choose to browse
+                          </span>
+                        </p>
+                      </div>
+                    </label>
+                  </CardContent>
+                </Card>
+              )}
+              <p className="text-[12px] font-medium text-[#8C94A6] mt-1">
+                *We only support Pdfs and .doc and .docx under 10MB
               </p>
             </div>
           </div>

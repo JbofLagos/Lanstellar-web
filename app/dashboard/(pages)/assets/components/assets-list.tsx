@@ -7,10 +7,11 @@ import { AssetDetailsModal } from "./assets-details";
 import { useAssets } from "@/lib/hooks/use-react-query";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 interface Asset {
   _id: string;
-  image: string;
+  media: { cloudinaryUrl: string }[];
   assetTitle: string;
   assetCategory: string;
   verified: string;
@@ -19,6 +20,7 @@ interface Asset {
   createdAt: string;
   status: string;
   statusColor: string;
+  docs: string;
 }
 
 type ApiResponse = {
@@ -126,8 +128,6 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
       </div>
     );
   }
-
-  // ✅ Conditional Rendering
   if (sortedAssets.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 h-screen">
@@ -157,13 +157,17 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
           <DialogTrigger asChild>
             <Card className="h-[357px] mx-auto w-[313px] cursor-pointer rounded-[20px] bg-[#F9F9F9] p-[10px] shadow-none border-none">
               <div className="flex flex-col gap-2">
-                <Image
-                  src={asset.image}
+                <img
+                  src={
+                    asset.media[0]?.cloudinaryUrl ||
+                    `https://dummyimage.com/600x400/5a1e9f/439eff&text=${asset.assetTitle}`
+                  }
                   alt={asset.assetTitle}
                   width={100}
                   height={100}
                   className="w-full rounded-[10px] h-[204px] object-cover"
                 />
+
                 <div className="flex flex-row items-center justify-between gap-2">
                   <span className="text-[#8C94A6] capitalize font-medium text-[12.06px]">
                     {asset.assetCategory}
@@ -179,7 +183,7 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <h2 className="text-[13.78px] font-semibold">
+                  <h2 className="text-[13.78px] capitalize font-semibold">
                     {asset.assetTitle}
                   </h2>
                   <p className="text-[13.78px] text-[#1A1A21] font-medium">
@@ -194,6 +198,7 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
           </DialogTrigger>
 
           <DialogContent className="!max-w-[90vw] w-[75vw] h-[90vh] scrollbar-hide overflow-y-auto">
+            <DialogTitle className=" p-0"></DialogTitle>
             <AssetDetailsModal asset={asset} />
           </DialogContent>
         </Dialog>

@@ -343,7 +343,7 @@ const RequestLoan: React.FC = () => {
           <Button
             type="submit"
             disabled={loanLoading || assets.length === 0 || !borrower}
-            className="bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] text-white rounded-[10px] w-full h-[40px] disabled:opacity-50"
+            className="bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] cursor-pointer text-white rounded-[10px] w-full h-[40px] disabled:opacity-50"
           >
             {loanLoading ? (
               <>

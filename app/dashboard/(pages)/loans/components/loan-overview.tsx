@@ -16,6 +16,8 @@ import {
   ChevronRight,
   CircleMinus,
   Clock,
+  Loader,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/api";
@@ -26,6 +28,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import DocsPreview from "../../assets/components/docsPreview";
+import { useDeleteLoan } from "@/lib/hooks/use-react-query";
 
 const StatusBadge = ({ status }: { status: string }) => {
   interface StatusStyles {
@@ -63,11 +67,15 @@ const StatusBadge = ({ status }: { status: string }) => {
 const LoanOverview = () => {
   interface Loan {
     id: string;
+    _id: string;
     loanPurpose: string;
     assetId: {
       assetTitle: string;
       assetCategory: string;
       assetLocation: string;
+      assetWorth: string;
+      verified: string;
+      docs: string[];
     };
     amount: number;
     duration: string;
@@ -78,6 +86,7 @@ const LoanOverview = () => {
 
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // dialog state
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
@@ -88,6 +97,7 @@ const LoanOverview = () => {
       const res = await api.get("/loan/");
       const data = res.data.loans;
       setLoans(data);
+      console.log(data);
     } catch (error) {
       console.error("Error fetching assets:", error);
     } finally {
@@ -98,6 +108,16 @@ const LoanOverview = () => {
   useEffect(() => {
     fetchLoans();
   }, []);
+  const { mutate: deleteLoan } = useDeleteLoan();
+
+  const handleDeleteLoan = () => {
+    if (!selectedLoan?._id) return;
+    deleteLoan(selectedLoan._id, {
+      onSuccess: () => {
+        setOpen(false);
+      },
+    });
+  };
 
   if (loading) {
     return (
@@ -220,89 +240,127 @@ const LoanOverview = () => {
             {selectedLoan && (
               <>
                 <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold">
-                    {selectedLoan.assetId.assetTitle}
+                  <DialogTitle className="text-lg font-semibold capitalize">
+                    {selectedLoan.loanPurpose}
                   </DialogTitle>
-                  <p className="text-sm text-[#49576D]">
-                    {selectedLoan.assetId.assetLocation ||
-                      "No location available"}
-                  </p>
                 </DialogHeader>
 
-                {/* Preview asset documents 
+                <div className="flex flex-row items-center justify-between gap-2">
+                  <span className="text-[#8C94A6] capitalize font-medium text-[12.06px]">
+                    {selectedLoan.assetId.assetCategory}
+                  </span>
+                  <span
+                    className={`text-[10.34px] gap-1 font-medium flex flex-row items-center justify-center text-[#1A1A21] h-[20px] w-[76px] rounded-[4px] ${
+                      selectedLoan.assetId.verified === "true"
+                        ? "bg-[#D3FED3]"
+                        : "bg-[#FCDB86]"
+                    } bg-opacity-10`}
+                  >
+                    {selectedLoan.assetId.verified === "true"
+                      ? "Verified ✅"
+                      : "In Review ⏳"}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <h2 className="text-[13.78px] capitalize font-semibold">
+                    {selectedLoan.assetId.assetTitle}
+                  </h2>
+                  <p className="text-[13.78px] text-[#1A1A21] font-medium">
+                    {selectedLoan.assetId.assetLocation}
+                  </p>
+                </div>
+                <DocsPreview
+                  docs={
+                    Array.isArray(selectedLoan.assetId.docs)
+                      ? selectedLoan.assetId.docs.map((str) => ({
+                          cloudinaryUrl: str,
+                        }))
+                      : selectedLoan.assetId.docs
+                  }
+                />
+
                 <div className="flex flex-col gap-4">
-                  <button className="flex items-center gap-2 border border-[#E5E5E5] px-3 py-2 rounded-md text-sm font-medium text-[#49576D] hover:bg-[#F8F8FB]">
-                    <Image
-                      src="/icons/document.svg"
-                      alt="document"
-                      width={18}
-                      height={18}
-                    />
-                    Preview asset documents
-                  </button>
-
-                  {/* Loan details table
-                  <div className="text-[13.78px] font-medium text-[#1A1A1A] flex flex-col gap-2">
+                  <div className=" text-[12px] font-medium text-[#1A1A1A] flex flex-col gap-2">
                     <div className="flex justify-between">
-                      <span className="text-[#49576D]">Purpose of loan</span>
-                      <span>{selectedLoan.loanPurpose}</span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span className="text-[#49576D]">Asset Collateral</span>
-                      <span>
-                        {selectedLoan.assetId.assetTitle} - Valued $
-                        {selectedLoan.amount * 10}
+                      <span className="text-[#49576D] text-[13.78px] font-medium">
+                        Purpose of loan
+                      </span>
+                      <span className=" capitalize">
+                        {selectedLoan.loanPurpose}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-[#49576D]">Amount Loaned</span>
+                      <span className="text-[#49576D] text-[13.78px] font-medium">
+                        Asset Collateral
+                      </span>
+                      <span>{selectedLoan.assetId.assetTitle}</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-[#49576D] text-[13.78px] font-medium">
+                        Amount Loaned
+                      </span>
                       <span>${selectedLoan.amount}</span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-[#49576D]">Loan Duration</span>
-                      <span>{selectedLoan.duration}</span>
+                      <span className="text-[#49576D] text-[13.78px] font-medium">
+                        Loan Duration
+                      </span>
+                      <span>{selectedLoan.duration} Months</span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-[#49576D]">
+                      <span className="text-[#49576D] text-[13.78px] font-medium">
                         Interest Rate – 10%
                       </span>
-                      <span>$100</span>
+                      <span>${(10 / selectedLoan.amount) * 100}</span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-[#49576D]">
+                      <span className="text-[#49576D] text-[13.78px] font-medium">
                         Processing Fee – 0.8%
                       </span>
-                      <span>$500</span>
+                      <span>${(0.8 / selectedLoan.amount) * 100}</span>
                     </div>
 
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-[13.78px] font-medium">
                       <span className="text-[#49576D]">Gas Fee – 0.2%</span>
-                      <span>$20</span>
+                      <span>${(0.2 / selectedLoan.amount) * 100}</span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-[#49576D]">
+                      <span className="text-[#49576D] text-[13.78px] font-medium">
                         Monthly Payment – over 6 months
                       </span>
-                      <span>$1,750</span>
+                      <span>$$$$$</span>
                     </div>
 
-                    <div className="flex justify-between font-bold text-lg">
-                      <span className="text-[#49576D]">Repayment Amount</span>
-                      <span className="text-black">$10,500</span>
+                    <div className="flex justify-between ">
+                      <span className="text-[#49576D] text-[13.78px] font-medium">
+                        Repayment Amount
+                      </span>
+                      <span className="text-black">$$$$$$</span>
                     </div>
                   </div>
                 </div>
-                  */}
-
-                <Button className=" cursor-pointer bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] text-white px-4 py-2 rounded-[10px] flex items-center gap-2">
-                  Repay Now – $1,750 Due
-                </Button>
+                <div className=" flex flex-row items-center justify-between gap-2 mt-4">
+                  <Button className=" cursor-pointer w-[90%] bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] text-white px-4 py-2 rounded-[10px] flex items-center gap-2">
+                    Repay Now – ${selectedLoan.amount} Due
+                  </Button>
+                  <Button
+                    onClick={handleDeleteLoan}
+                    disabled={isDeleting}
+                    className="cursor-pointer w-fit bg-[#FF3B30]/30 hover:bg-[#FF3B30]/50 text-[#FF3B30] px-4 py-2 rounded-[10px] flex items-center gap-2 mx-auto justify-center"
+                  >
+                    {isDeleting ? (
+                      <Loader className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
               </>
             )}
           </DialogContent>

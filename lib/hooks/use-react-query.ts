@@ -8,6 +8,7 @@ export const queryKeys = {
   asset: (id: string) => ["assets", id] as const,
   user: ["user"] as const,
   loans: ["loans"] as const,
+  loan: (id: string) => ["loan", id] as const,
 } as const;
 
 // Asset Queries
@@ -35,7 +36,7 @@ export function useAsset(id: string) {
       }
       throw new Error(response.message || "Failed to fetch asset");
     },
-    enabled: !!id, // Only run if id exists
+    enabled: !!id,
   });
 }
 
@@ -68,17 +69,13 @@ export function useLoans() {
   });
 }
 
-// Asset Mutations
 export function useCreateAsset() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (formData: FormData) => apiService.createAsset(formData),
     onSuccess: (data) => {
       console.log(data);
-      // Invalidate and refetch assets
       queryClient.invalidateQueries({ queryKey: queryKeys.assets });
-      toast.success("Asset created successfully!");
     },
     onError: (error) => {
       toast.error(error.message || "Failed to create asset");
@@ -111,14 +108,30 @@ export function useDeleteAsset() {
   return useMutation({
     mutationFn: (id: string) => apiService.deleteAsset(id),
     onSuccess: (_, id) => {
-      // Remove from cache
       queryClient.removeQueries({ queryKey: queryKeys.asset(id) });
-      // Invalidate assets list
+
       queryClient.invalidateQueries({ queryKey: queryKeys.assets });
       toast.success("Asset deleted successfully!");
     },
     onError: (error) => {
       toast.error(error.message || "Failed to delete asset");
+    },
+  });
+}
+export function useDeleteLoan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => apiService.deleteLoan(id),
+    onSuccess: (_, id) => {
+      // Remove the specific loan query from cache
+      queryClient.removeQueries({ queryKey: queryKeys.loan(id) });
+      // Invalidate the loans list to refetch
+      queryClient.invalidateQueries({ queryKey: queryKeys.loans });
+      toast.success("Loan deleted successfully!");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete loan");
     },
   });
 }
