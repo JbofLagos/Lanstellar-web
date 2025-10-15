@@ -3,18 +3,15 @@
 </p>
 <p align="center"><h1 align="center">LANSTELLAR-WEB</h1></p>
 <p align="center">
-	<em><code>❯ REPLACE-ME</code></em>
-</p>
-<p align="center">
 	<img src="https://img.shields.io/github/license/JbofLagos/Lanstellar-web?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
 	<img src="https://img.shields.io/github/last-commit/JbofLagos/Lanstellar-web?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
 	<img src="https://img.shields.io/github/languages/top/JbofLagos/Lanstellar-web?style=default&color=0080ff" alt="repo-top-language">
 	<img src="https://img.shields.io/github/languages/count/JbofLagos/Lanstellar-web?style=default&color=0080ff" alt="repo-language-count">
 </p>
-<p align="center"><!-- default option, no dependency badges. -->
+<p align="center">
 </p>
 <p align="center">
-	<!-- default option, no dependency badges. -->
+	
 </p>
 <br>
 
@@ -33,20 +30,6 @@
 - [ Contributing](#-contributing)
 - [ License](#-license)
 - [ Acknowledgments](#-acknowledgments)
-
----
-
-## Overview
-
-<code>❯ REPLACE-ME</code>
-
----
-
-## Features
-
-<code>❯ REPLACE-ME</code>
-
----
 
 ## Project Structure
 
@@ -570,14 +553,6 @@ Run the test suite using the following command:
 
 ---
 
-## Project Roadmap
-
-- [x] **`Task 1`**: <strike>Implement feature one.</strike>
-- [ ] **`Task 2`**: Implement feature two.
-- [ ] **`Task 3`**: Implement feature three.
-
----
-
 ## Contributing
 
 - **💬 [Join the Discussions](https://github.com/JbofLagos/Lanstellar-web/discussions)**: Share your insights, provide feedback, or ask questions.
@@ -618,17 +593,3 @@ Run the test suite using the following command:
    </a>
 </p>
 </details>
-
----
-
-## License
-
-This project is protected under the [SELECT-A-LICENSE](https://choosealicense.com/licenses) License. For more details, refer to the [LICENSE](https://choosealicense.com/licenses/) file.
-
----
-
-## Acknowledgments
-
-- List any resources, contributors, inspiration, etc. here.
-
----
