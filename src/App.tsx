@@ -39,7 +39,7 @@ const App = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<HomePage />} />
-      
+
       {/* Guest Routes - Redirect to dashboard if already logged in */}
       <Route
         path="/login"
