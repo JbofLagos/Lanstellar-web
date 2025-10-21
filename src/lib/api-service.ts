@@ -8,6 +8,7 @@ export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
   data?: T;
+  assets?: Asset[];
 }
 
 export interface Asset {
@@ -23,12 +24,17 @@ export interface Asset {
   statusColor: string;
   assetDescription?: string;
   createdAt?: string;
+  assetDocs: string[];  
 }
 
 export interface User {
   _id: string;
   email: string;
   fullName?: string;
+  companyName?: string;
+  companyEmail?: string;
+  companyAddress?: string;
+  countryCode?: string;
   username?: string;
   walletAddress?: string;
   userType?: string;
@@ -114,7 +120,7 @@ class ApiService {
 
   // Asset-related API calls
   getAssets = async () => {
-    return this.request<Asset[]>("GET", "/assets/");
+    return this.request<Asset[]>("GET", "/assets");
   };
 
   createAsset = async (formData: FormData) => {

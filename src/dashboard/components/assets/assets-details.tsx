@@ -1,27 +1,23 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader, Trash2 } from "lucide-react";
+import {
+  Loader,
+  Trash2,
+  MapPin,
+  DollarSign,
+  Calendar,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import DocsPreview from "./docsPreview";
+import { type Asset } from "@/lib/api-service";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { deleteAsset } from "@/lib/api-service";
-
-interface Asset {
-  _id: string;
-  assetTitle: string;
-  assetCategory: string;
-  assetLocation: string;
-  docs: string;
-  verified: string;
-  assetWorth: string | number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  media: any;
-  status: string;
-  statusColor: string;
-  assetDescription?: string;
-  createdAt?: string;
-}
 
 type TimelineEntry = {
   date: string;
@@ -34,32 +30,48 @@ interface AssetDetailsModalProps {
 }
 
 const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
-  // fix: ensure we handle asset.media gracefully
-  const imageUrl =
-    Array.isArray(asset.media) && asset.media[0]?.cloudinaryUrl
-      ? asset.media[0].cloudinaryUrl
-      : typeof asset.media === "string" && asset.media
-      ? asset.media
-      : `https://dummyimage.com/600x400/5a1e9f/439eff&text=${encodeURIComponent(
-          asset.assetTitle
-        )}`;
+  const queryClient = useQueryClient();
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Get all images from the asset
+  const images =
+    Array.isArray(asset.media) && asset.media.length > 0
+      ? asset.media.map((m) => m.cloudinaryUrl)
+      : [
+          `https://dummyimage.com/600x400/5a1e9f/ffffff&text=${encodeURIComponent(
+            asset.assetTitle
+          )}`,
+        ];
 
   const timelineData: TimelineEntry[] = [
     {
       date: asset.createdAt
-        ? new Date(asset.createdAt).toLocaleString()
+        ? new Date(asset.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
         : "Recently",
       title: `${asset.assetTitle} added to system`,
       content: "Asset Created: Company Admin",
     },
     {
       date: asset.createdAt
-        ? new Date(asset.createdAt).toLocaleString()
+        ? new Date(asset.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
         : "Recently",
       title: `Asset Valued: $${
         typeof asset.assetWorth === "number"
           ? asset.assetWorth.toLocaleString()
-          : asset.assetWorth
+          : parseFloat(String(asset.assetWorth) || "0").toLocaleString()
       } — ${asset.verified === "true" ? "Docs Verified" : "Docs Pending"}`,
       content:
         asset.verified === "true"
@@ -77,111 +89,288 @@ const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
       : []),
   ];
 
-  const [isDeleting, setIsDeleting] = useState(false);
-
   const handleDeleteAsset = async () => {
     if (!asset._id) return;
+
+    if (
+      !confirm(
+        "Are you sure you want to delete this asset? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
     setIsDeleting(true);
     try {
       const response = await deleteAsset(asset._id);
       if (response.success) {
-        console.log("Delete asset with ID:", asset._id);
-        // Optionally: notify parent to refetch assets or close modal
+        toast.success("Asset deleted successfully");
+        queryClient.invalidateQueries({ queryKey: ["assets"] });
+        // Close the dialog by clicking outside or implement close callback
+        window.location.reload(); // Temporary solution
       } else {
-        console.error("Failed to delete asset:", response.message);
+        toast.error(response.message || "Failed to delete asset");
       }
     } catch (error) {
       console.error("Delete error:", error);
+      toast.error("An error occurred while deleting the asset");
     } finally {
       setIsDeleting(false);
     }
   };
 
+  const nextImage = () => {
+    setSelectedImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const previousImage = () => {
+    setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
   return (
     <div className="w-full overflow-y-auto scrollbar-hide">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-        <Card className="border-none shadow-none w-full">
-          <CardContent className="p-0 flex justify-between flex-col">
-            <img
-              src={imageUrl}
-              alt={asset.assetTitle}
-              width={100}
-              height={100}
-              className="w-full rounded-[10px] h-[204px] object-cover"
-            />
-            <div className="mt-4 flex flex-col gap-1">
-              <div className="flex flex-row items-center justify-between gap-2">
-                <span className="text-[#8C94A6] font-medium text-[12.06px] capitalize">
-                  {asset.assetCategory}
-                </span>
-                <span
-                  className={`text-[10.34px] gap-1 font-medium flex flex-row items-center justify-center text-[#1A1A21] h-[20px] w-[76px] rounded-[4px] ${
-                    asset.verified === "true" ? "bg-[#D3FED3]" : "bg-[#FCDB86]"
-                  } bg-opacity-10`}
-                >
-                  {asset.verified === "true" ? "Verified ✅" : "In Review ⏳"}
-                </span>
-              </div>
-              <p className="text-[16px] font-medium text-[#1A1A21]">
-                {asset.assetTitle}
-              </p>
-              <p className="text-[13.78px] text-[#1A1A21] font-medium">
-                {asset.assetLocation}
-              </p>
-              {asset.assetDescription && (
-                <p className="text-[12px] text-[#8C94A6] font-medium">
-                  {asset.assetDescription}
-                </p>
-              )}
-              <p className="mt-2 text-[20px] text-[#292D32] font-bold">
-                $
-                {typeof asset.assetWorth === "number"
-                  ? asset.assetWorth.toLocaleString()
-                  : asset.assetWorth}
-              </p>
-              <DocsPreview docs={asset.docs} />
-            </div>
-            <div className="flex flex-row gap-4 w-full mt-4">
-              <Button className="cursor-pointer bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] text-white px-4 py-2 rounded-[10px] flex items-center gap-2 w-[80%]">
-                Request Loan
-              </Button>
-              <Button
-                onClick={handleDeleteAsset}
-                disabled={isDeleting}
-                className="cursor-pointer w-fit bg-[#FF3B30]/30 hover:bg-[#FF3B30]/50 text-[#FF3B30] px-4 py-2 rounded-[10px] flex items-center gap-2 mx-auto justify-center"
-              >
-                {isDeleting ? (
-                  <Loader className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column - Images and Main Info */}
+        <div className="space-y-4">
+          {/* Image Gallery */}
+          <Card className="border border-[#E4E3EC] shadow-sm overflow-hidden rounded-[16px]">
+            <CardContent className="p-0">
+              {/* Main Image Display */}
+              <div className="relative bg-gradient-to-br from-[#F8F9FF] to-[#FFF8F0] group">
+                <img
+                  src={images[selectedImageIndex]}
+                  alt={`${asset.assetTitle} - Image ${selectedImageIndex + 1}`}
+                  className="w-full h-[400px] object-cover"
+                />
+
+                {/* Image Navigation Arrows */}
+                {images.length > 1 && (
+                  <>
+                    <Button
+                      onClick={previousImage}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full h-10 w-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      onClick={nextImage}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full h-10 w-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </Button>
+
+                    {/* Image Counter */}
+                    <div className="absolute bottom-4 right-4 bg-black/70 text-white text-[12px] px-3 py-1 rounded-full">
+                      {selectedImageIndex + 1} / {images.length}
+                    </div>
+                  </>
                 )}
-              </Button>
+              </div>
+
+              {/* Thumbnail Strip */}
+              {images.length > 1 && (
+                <div className="p-4 bg-white border-t border-[#E4E3EC]">
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                    {images.map((img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${
+                          index === selectedImageIndex
+                            ? "border-[#563BB5] ring-2 ring-[#563BB5]/30"
+                            : "border-transparent hover:border-[#E4E3EC]"
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={`Thumbnail ${index + 1}`}
+                          className="w-20 h-20 object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Asset Info Card */}
+          <Card className="border border-[#E4E3EC] shadow-sm rounded-[16px]">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {/* Header with Category and Status */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <Badge className="bg-[#F4F3F7] text-[#8C94A6] capitalize text-[12px] font-medium hover:bg-[#F4F3F7] px-3 py-1">
+                    {asset.assetCategory.replace("-", " ")}
+                  </Badge>
+                  <Badge
+                    className={`text-[11px] gap-1 font-medium ${
+                      asset.verified === "true"
+                        ? "bg-[#D3FED3] text-green-700 hover:bg-[#D3FED3]"
+                        : "bg-[#FCDB86] text-orange-700 hover:bg-[#FCDB86]"
+                    }`}
+                  >
+                    {asset.verified === "true" ? "✅ Verified" : "⏳ In Review"}
+                  </Badge>
+                </div>
+
+                {/* Title */}
+                <div>
+                  <h2 className="text-[24px] font-bold text-[#1A1A21] capitalize">
+                    {asset.assetTitle}
+                  </h2>
+                </div>
+
+                <Separator className="bg-[#E4E3EC]" />
+
+                {/* Details Grid */}
+                <div className="grid gap-4">
+                  {/* Location */}
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-[#F4F3F7] rounded-lg">
+                      <MapPin className="w-4 h-4 text-[#8C94A6]" />
+                    </div>
+                    <div>
+                      <p className="text-[12px] text-[#8C94A6] font-medium">
+                        Location
+                      </p>
+                      <p className="text-[14px] text-[#1A1A21] font-semibold">
+                        {asset.assetLocation}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Worth */}
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-gradient-to-br from-[#439EFF]/10 to-[#5B1E9F]/10 rounded-lg">
+                      <DollarSign className="w-4 h-4 text-[#563BB5]" />
+                    </div>
+                    <div>
+                      <p className="text-[12px] text-[#8C94A6] font-medium">
+                        Asset Worth
+                      </p>
+                      <p className="text-[24px] text-[#292D32] font-bold">
+                        $
+                        {typeof asset.assetWorth === "number"
+                          ? asset.assetWorth.toLocaleString()
+                          : parseFloat(
+                              String(asset.assetWorth) || "0"
+                            ).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Date */}
+                  {asset.createdAt && (
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-[#F4F3F7] rounded-lg">
+                        <Calendar className="w-4 h-4 text-[#8C94A6]" />
+                      </div>
+                      <div>
+                        <p className="text-[12px] text-[#8C94A6] font-medium">
+                          Added On
+                        </p>
+                        <p className="text-[14px] text-[#1A1A21] font-semibold">
+                          {new Date(asset.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            }
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {asset.assetDescription && (
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-[#F4F3F7] rounded-lg">
+                        <FileText className="w-4 h-4 text-[#8C94A6]" />
+                      </div>
+                      <div>
+                        <p className="text-[12px] text-[#8C94A6] font-medium">
+                          Description
+                        </p>
+                        <p className="text-[13px] text-[#49576D] leading-relaxed mt-1">
+                          {asset.assetDescription}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Documents */}
+                {asset.docs && (
+                  <div className="mt-4">
+                    <DocsPreview docs={asset.docs} />
+                  </div>
+                )}
+
+                <Separator className="bg-[#E4E3EC]" />
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button className="flex-1 cursor-pointer bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90 text-white px-6 py-3 rounded-[10px] flex items-center justify-center gap-2 font-medium">
+                    <DollarSign className="w-4 h-4" />
+                    Request Loan
+                  </Button>
+                  <Button
+                    onClick={handleDeleteAsset}
+                    disabled={isDeleting}
+                    className="cursor-pointer bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-6 py-3 rounded-[10px] flex items-center justify-center gap-2 font-medium disabled:opacity-50"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - Timeline */}
+        <Card className="border border-[#E4E3EC] shadow-sm rounded-[16px] h-full">
+          <CardContent className="p-6">
+            <h3 className="text-[18px] font-semibold text-[#1A1A21] mb-6 flex items-center gap-2">
+              <div className="w-1 h-6 bg-gradient-to-b from-[#439EFF] to-[#5B1E9F] rounded-full"></div>
+              Activity Timeline
+            </h3>
+            <div className="relative">
+              <Separator
+                orientation="vertical"
+                className="bg-[#E4E3EC] absolute left-2 h-full w-[2px]"
+              />
+              {timelineData.map((entry, index) => (
+                <div key={index} className="relative mb-6 pl-8 last:mb-0">
+                  <div className="bg-gradient-to-br from-[#439EFF] to-[#5B1E9F] absolute left-0 top-0 size-5 rounded-full border-4 border-white" />
+                  <div className="flex flex-col gap-2">
+                    <h4 className="font-semibold text-[14px] text-[#1A1A21]">
+                      {entry.title}
+                    </h4>
+                    <span className="text-[12px] font-medium text-[#8C94A6] flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {entry.date}
+                    </span>
+                    <p className="text-[13px] text-[#49576D] bg-[#F8F9FF] px-3 py-2 rounded-lg">
+                      {entry.content}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-none w-full h-full">
-          <h3 className="text-[15px] font-semibold ">Activity Timeline</h3>
-          <div className="relative">
-            <Separator
-              orientation="vertical"
-              className="bg-[#D3D3D3] absolute left-2 h-full"
-            />
-            {timelineData.map((entry, index) => (
-              <div key={index} className="relative mb-4 pl-6">
-                <div className="bg-white border border-[#D3D3D3] absolute left-0 top-3.5 size-4 rounded-full" />
-                <div className="flex flex-col gap-1">
-                  <h4 className="font-medium text-[13px] text-[#1A1A21] capitalize">
-                    {entry.title}
-                  </h4>
-                  <span className="text-[12px] font-medium text-[#8C94A6]">
-                    {entry.date}
-                  </span>
-                </div>
-                <p className="text-sm text-[#8C94A6] mt-1">{entry.content}</p>
-              </div>
-            ))}
-          </div>
         </Card>
       </div>
     </div>

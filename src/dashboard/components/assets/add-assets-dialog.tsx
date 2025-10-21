@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,11 +22,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, X, ImageIcon, File } from "lucide-react";
+import { Plus, X, File, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { createAsset } from "@/lib/api-service";
+import { useForm, Controller } from "react-hook-form";
+import { useCreateAsset } from "@/hook/useCreateAsset";
 
-interface AssetForm {
+interface AssetFormData {
   assetTitle: string;
   assetCategory: string;
   assetWorth: string;
@@ -34,159 +35,151 @@ interface AssetForm {
   assetDescription: string;
 }
 
+interface FileWithPreview {
+  file: File;
+  preview: string;
+}
+
+const MAX_IMAGES = 5;
+const MAX_DOCUMENTS = 3;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 const AddAssetsDialog = () => {
-  const [media, setMedia] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [assetDocs, setAssetDocs] = useState<File | null>(null);
+  const [media, setMedia] = useState<FileWithPreview[]>([]);
+  const [assetDocs, setAssetDocs] = useState<File[]>([]);
   const [open, setOpen] = useState(false);
-  const [isPending, setIsPending] = useState(false);
-  const [formData, setFormData] = useState<AssetForm>({
-    assetTitle: "",
-    assetCategory: "",
-    assetWorth: "",
-    assetLocation: "",
-    assetDescription: "",
-  });
+  const { createNewAsset, loading } = useCreateAsset();
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0] || null;
-    if (selectedFile) {
-      if (!["image/png", "image/jpeg"].includes(selectedFile.type)) {
-        toast.error("We only support PNG and JPEG");
-        return;
-      }
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error("File size must be under 10MB");
-        return;
-      }
-      setMedia(selectedFile);
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-      setPreviewUrl(URL.createObjectURL(selectedFile));
-    }
-  };
-
-  const handleDocumentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0] || null;
-    if (selectedFile) {
-      if (
-        ![
-          "application/pdf",
-          "application/msword",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ].includes(selectedFile.type)
-      ) {
-        toast.error("We only support PDFs and DOC/DOCX");
-        return;
-      }
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error("File size must be under 10MB");
-        return;
-      }
-      setAssetDocs(selectedFile);
-    }
-  };
-
-  const removeFile = () => {
-    setMedia(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setPreviewUrl(null);
-    const fileInput = document.getElementById(
-      "file-upload"
-    ) as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = "";
-    }
-  };
-
-  const removeDocument = () => {
-    setAssetDocs(null);
-    const docInput = document.getElementById(
-      "document-upload"
-    ) as HTMLInputElement;
-    if (docInput) {
-      docInput.value = "";
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<AssetFormData>({
+    defaultValues: {
       assetTitle: "",
       assetCategory: "",
       assetWorth: "",
       assetLocation: "",
       assetDescription: "",
+    },
+  });
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+
+    if (media.length + files.length > MAX_IMAGES) {
+      toast.error(`You can only upload up to ${MAX_IMAGES} images`);
+      return;
+    }
+
+    const validFiles: FileWithPreview[] = [];
+
+    for (const file of files) {
+      if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+        toast.error(`${file.name}: Only PNG and JPEG images are supported`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name}: File size must be under 10MB`);
+        continue;
+      }
+      validFiles.push({
+        file,
+        preview: URL.createObjectURL(file),
+      });
+    }
+
+    setMedia((prev) => [...prev, ...validFiles]);
+    event.target.value = "";
+  };
+
+  const handleDocumentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+
+    if (assetDocs.length + files.length > MAX_DOCUMENTS) {
+      toast.error(`You can only upload up to ${MAX_DOCUMENTS} documents`);
+      return;
+    }
+
+    const validFiles: File[] = [];
+
+    for (const file of files) {
+      if (
+        ![
+          "application/pdf",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ].includes(file.type)
+      ) {
+        toast.error(`${file.name}: Only PDF and DOC/DOCX are supported`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name}: File size must be under 10MB`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    setAssetDocs((prev) => [...prev, ...validFiles]);
+    event.target.value = "";
+  };
+
+  const removeImage = (index: number) => {
+    setMedia((prev) => {
+      const newMedia = [...prev];
+      URL.revokeObjectURL(newMedia[index].preview);
+      newMedia.splice(index, 1);
+      return newMedia;
     });
-    setMedia(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setPreviewUrl(null);
-    setAssetDocs(null);
-    const fileInput = document.getElementById(
-      "file-upload"
-    ) as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = "";
-    }
-    const docInput = document.getElementById(
-      "document-upload"
-    ) as HTMLInputElement;
-    if (docInput) {
-      docInput.value = "";
-    }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!formData.assetTitle.trim()) {
-      toast.error("Asset title is required");
-      return;
-    }
-    if (!formData.assetCategory) {
-      toast.error("Asset category is required");
-      return;
-    }
-    if (!formData.assetWorth.trim()) {
-      toast.error("Asset worth is required");
-      return;
-    }
-    if (!formData.assetLocation.trim()) {
-      toast.error("Asset location is required");
-      return;
-    }
-
-    setIsPending(true);
-    const form = new FormData();
-
-    // Append all form fields
-    form.append("assetTitle", formData.assetTitle.trim());
-    form.append("assetCategory", formData.assetCategory);
-    form.append("assetWorth", formData.assetWorth.trim());
-    form.append("assetLocation", formData.assetLocation.trim());
-    form.append("assetDescription", formData.assetDescription.trim());
-    if (media) {
-      form.append("media", media);
-    }
-    if (assetDocs) {
-      form.append("assetDocs", assetDocs);
-    }
-
-    const response = await createAsset(form);
-    if (response.success) {
-      resetForm();
-      toast.success("Assets created Sucessfully");
-      setOpen(false);
-    }
-    setIsPending(false);
+  const removeDocument = (index: number) => {
+    setAssetDocs((prev) => {
+      const newDocs = [...prev];
+      newDocs.splice(index, 1);
+      return newDocs;
+    });
   };
+
+  const resetForm = () => {
+    reset();
+    media.forEach((m) => URL.revokeObjectURL(m.preview));
+    setMedia([]);
+    setAssetDocs([]);
+  };
+
+  const onSubmit = async (data: AssetFormData) => {
+    console.log("Form data submitted:", data);
+
+    if (media.length === 0) {
+      toast.error("Please upload at least one image");
+      return;
+    }
+
+    if (!data.assetCategory || data.assetCategory.trim() === "") {
+      toast.error("Please select an asset category");
+      return;
+    }
+
+    await createNewAsset({
+      ...data,
+      media: media.map((m) => m.file),
+      assetDocs: assetDocs,
+    });
+
+    resetForm();
+    setOpen(false);
+  };
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      media.forEach((m) => URL.revokeObjectURL(m.preview));
+    };
+  }, [media]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -197,272 +190,374 @@ const AddAssetsDialog = () => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="w-fit border-[4px] border-[#F8F8F8] rounded-[20px] h-[90vh] overflow-y-auto scrollbar-hide">
-        <form onSubmit={handleSubmit}>
+      <DialogContent className="w-full !max-w-[600px] border-[4px] border-[#F8F8F8] rounded-[20px] overflow-y-auto scrollbar-hide">
+        <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle className="text-[20px] font-semibold text-black">
-              Add new asset
+              Add New Asset
             </DialogTitle>
+            <DialogDescription className="text-[14px] text-[#8C94A6]">
+              Fill in the details below to add a new asset to your portfolio
+            </DialogDescription>
           </DialogHeader>
-          <DialogDescription></DialogDescription>
 
-          <div className="grid gap-2">
+          <div className="grid gap-4 mt-4">
             {/* Asset Title */}
-            <div className="grid gap-1.5">
+            <div className="grid gap-2">
               <Label
                 htmlFor="assetTitle"
-                className="text-[13.78px] font-medium text-[#1A1A21]"
+                className="text-[14px] font-medium text-[#1A1A21]"
               >
-                Asset Title
+                Asset Title <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="assetTitle"
-                name="assetTitle"
-                value={formData.assetTitle}
-                onChange={handleChange}
-                placeholder="Enter Asset title"
-                className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333]"
-                required
+                {...register("assetTitle", {
+                  required: "Asset title is required",
+                })}
+                placeholder="Enter asset title"
+                className={`w-full h-[42px] rounded-[10px] border bg-[#F5F5F5] px-4 py-2 text-[14px] text-[#333] ${
+                  errors.assetTitle ? "border-red-500" : "border-[#F1F1F1]"
+                }`}
               />
+              {errors.assetTitle && (
+                <p className="text-red-500 text-xs">
+                  {errors.assetTitle.message}
+                </p>
+              )}
             </div>
 
-            {/* Category */}
-            <div className="grid gap-1.5">
-              <Label className="text-[13.78px] font-medium text-[#1A1A21]">
-                Asset Category
-              </Label>
-              <Select
-                value={formData.assetCategory}
-                onValueChange={(val) =>
-                  setFormData({ ...formData, assetCategory: val })
-                }
-                required
-              >
-                <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333] shadow-none">
-                  <SelectValue placeholder="Enter Asset Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Categories</SelectLabel>
-                    <SelectItem value="residential">Residential</SelectItem>
-                    <SelectItem value="real-estate">Real Estate</SelectItem>
-                    <SelectItem value="commodities">Commodities</SelectItem>
-                    <SelectItem value="art-collectibles">
-                      Art Collectibles
-                    </SelectItem>
-                    <SelectItem value="commercial">Commercial</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Category */}
+              <div className="grid gap-2">
+                <Label className="text-[14px] font-medium text-[#1A1A21]">
+                  Category <span className="text-red-500">*</span>
+                </Label>
+                <Controller
+                  name="assetCategory"
+                  control={control}
+                  rules={{
+                    required: "Category is required",
+                    validate: (value) => {
+                      const validCategories = [
+                        "residential",
+                        "real-estate",
+                        "commodities",
+                        "art-collectibles",
+                        "commercial",
+                      ];
+                      return (
+                        validCategories.includes(value) ||
+                        "Please select a valid category"
+                      );
+                    },
+                  }}
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={(value) => {
+                        console.log("Category selected:", value);
+                        field.onChange(value);
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger
+                        className={`w-full h-[42px] rounded-[10px] border bg-[#F5F5F5] px-4 text-[14px] text-[#333] shadow-none ${
+                          errors.assetCategory
+                            ? "border-red-500"
+                            : "border-[#F1F1F1]"
+                        }`}
+                      >
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Categories</SelectLabel>
+                          <SelectItem value="residential">
+                            Residential
+                          </SelectItem>
+                          <SelectItem value="real-estate">
+                            Real Estate
+                          </SelectItem>
+                          <SelectItem value="commodities">
+                            Commodities
+                          </SelectItem>
+                          <SelectItem value="art-collectibles">
+                            Art & Collectibles
+                          </SelectItem>
+                          <SelectItem value="commercial">Commercial</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.assetCategory && (
+                  <p className="text-red-500 text-xs">
+                    {errors.assetCategory.message}
+                  </p>
+                )}
+              </div>
 
-            {/* Worth */}
-            <div className="grid gap-1.5">
-              <Label
-                htmlFor="assetWorth"
-                className="text-[13.78px] font-medium text-[#1A1A21]"
-              >
-                Asset Worth
-              </Label>
-              <Input
-                id="assetWorth"
-                name="assetWorth"
-                type="number"
-                value={formData.assetWorth}
-                onChange={handleChange}
-                placeholder="Enter asset Worth ($)"
-                className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333]"
-                required
-              />
-              <span className="text-[#8C94A6] text-[11px] font-medium">
-                *Make sure the worth written is correct
-              </span>
+              {/* Worth */}
+              <div className="grid gap-2">
+                <Label
+                  htmlFor="assetWorth"
+                  className="text-[14px] font-medium text-[#1A1A21]"
+                >
+                  Asset Worth ($) <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="assetWorth"
+                  type="number"
+                  {...register("assetWorth", {
+                    required: "Asset worth is required",
+                    min: { value: 0, message: "Worth must be positive" },
+                  })}
+                  placeholder="10,000"
+                  className={`w-full h-[42px] rounded-[10px] border bg-[#F5F5F5] px-4 py-2 text-[14px] text-[#333] ${
+                    errors.assetWorth ? "border-red-500" : "border-[#F1F1F1]"
+                  }`}
+                />
+                {errors.assetWorth && (
+                  <p className="text-red-500 text-xs">
+                    {errors.assetWorth.message}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Location */}
-            <div className="grid gap-1.5">
+            <div className="grid gap-2">
               <Label
                 htmlFor="assetLocation"
-                className="text-[13.78px] font-medium text-[#1A1A21]"
+                className="text-[14px] font-medium text-[#1A1A21]"
               >
-                Asset Location
+                Asset Location <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="assetLocation"
-                name="assetLocation"
-                value={formData.assetLocation}
-                onChange={handleChange}
-                placeholder="Enter asset Location"
-                className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333]"
-                required
+                {...register("assetLocation", {
+                  required: "Location is required",
+                })}
+                placeholder="Enter asset location"
+                className={`w-full h-[42px] rounded-[10px] border bg-[#F5F5F5] px-4 py-2 text-[14px] text-[#333] ${
+                  errors.assetLocation ? "border-red-500" : "border-[#F1F1F1]"
+                }`}
               />
+              {errors.assetLocation && (
+                <p className="text-red-500 text-xs">
+                  {errors.assetLocation.message}
+                </p>
+              )}
             </div>
 
-            <div className="grid gap-1.5">
+            {/* Description */}
+            <div className="grid gap-2">
               <Label
                 htmlFor="assetDescription"
-                className="text-[13.78px] font-medium text-[#1A1A21]"
+                className="text-[14px] font-medium text-[#1A1A21]"
               >
                 Asset Description
               </Label>
               <Textarea
                 id="assetDescription"
-                name="assetDescription"
-                value={formData.assetDescription}
-                onChange={handleChange}
-                placeholder="Enter asset description"
-                className="w-[454px] h-[65px] resize-none rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-3 py-2 text-[13.78px] font-medium text-[#333]"
+                {...register("assetDescription")}
+                placeholder="Provide a detailed description of the asset..."
+                className="w-full min-h-[80px] resize-none rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-4 py-3 text-[14px] text-[#333]"
               />
             </div>
 
-            {/* File Upload */}
-            <div className="grid">
-              <Label className="text-sm font-medium text-[#1A1A21] mb-2 block">
-                Assets Image
-              </Label>
-              {media && previewUrl ? (
-                <Card className="border border-[#F1F1F1] bg-white shadow-none">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="relative p-2 rounded-md overflow-hidden bg-[#563BB5]/20">
-                          <ImageIcon className="w-5 h-5 text-[#563BB5]" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
-                            {media.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {(media.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={removeFile}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="border border-dashed border-[#F1F1F1] bg-white h-[86px] shadow-none flex flex-col justify-center items-center">
-                  <CardContent className="p-4 flex flex-col justify-center items-center w-full">
+            {/* Images Upload - Up to 5 */}
+            <div className="grid gap-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-[14px] font-medium text-[#1A1A21]">
+                  Asset Images <span className="text-red-500">*</span>
+                  <span className="text-[12px] text-[#8C94A6] font-normal ml-2">
+                    ({media.length}/{MAX_IMAGES})
+                  </span>
+                </Label>
+              </div>
+
+              {/* Upload Area */}
+              {media.length < MAX_IMAGES && (
+                <Card className="border-2 border-dashed border-[#E4E3EC] bg-gradient-to-b from-[#F8F9FF] to-white shadow-none hover:border-[#563BB5] transition-colors">
+                  <CardContent className="p-6">
                     <input
                       type="file"
-                      accept=".png,.jpg,.jpeg"
+                      accept="image/png,image/jpeg,image/jpg"
                       onChange={handleImageSelect}
+                      multiple
                       className="hidden"
-                      id="file-upload"
+                      id="image-upload"
                     />
                     <label
-                      htmlFor="file-upload"
+                      htmlFor="image-upload"
                       className="cursor-pointer w-full flex flex-col items-center justify-center text-center"
                     >
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <ImageIcon className="w-7 h-7 text-gray-400" />
-                        <p className="text-[13px] text-gray-600 leading-snug">
-                          Drag your files here or{" "}
-                          <span className="text-[#563BB5] font-medium">
-                            choose to browse
-                          </span>
-                        </p>
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="p-3 rounded-full bg-[#563BB5]/10">
+                          <Upload className="w-6 h-6 text-[#563BB5]" />
+                        </div>
+                        <div>
+                          <p className="text-[14px] font-medium text-gray-700">
+                            Click to upload or drag and drop
+                          </p>
+                          <p className="text-[12px] text-[#8C94A6] mt-1">
+                            PNG or JPEG (max {MAX_IMAGES} images, 10MB each)
+                          </p>
+                        </div>
                       </div>
                     </label>
                   </CardContent>
                 </Card>
               )}
 
-              <p className="text-[12px] font-medium text-[#8C94A6] mt-1">
-                *We only support PNGs and JPEG under 10MB
-              </p>
-            </div>
-            <div className="grid">
-              <Label className="text-sm font-medium text-[#1A1A21] mb-2 block">
-                Assets Documents
-              </Label>
-              {assetDocs ? (
-                <Card className="border border-[#F1F1F1] bg-white shadow-none">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="relative p-2 rounded-md overflow-hidden bg-[#563BB5]/20">
-                          <File className="w-5 h-5 text-[#563BB5]" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
-                            {assetDocs.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {(assetDocs.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      </div>
+              {/* Preview Grid */}
+              {media.length > 0 && (
+                <div className="grid grid-cols-3 gap-3">
+                  {media.map((item, index) => (
+                    <Card
+                      key={index}
+                      className="border border-[#E4E3EC] overflow-hidden group relative"
+                    >
+                      <img
+                        src={item.preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover"
+                      />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={removeDocument}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-1 h-7 w-7 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X className="w-4 h-4" />
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="border border-dashed border-[#F1F1F1] bg-white h-[86px] shadow-none flex flex-col justify-center items-center">
-                  <CardContent className="p-4 flex flex-col justify-center items-center w-full">
+                      <div className="px-2 py-1 bg-black/50 absolute bottom-0 left-0 right-0">
+                        <p className="text-[10px] text-white truncate">
+                          {item.file.name}
+                        </p>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Documents Upload - Up to 3 */}
+            <div className="grid gap-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-[14px] font-medium text-[#1A1A21]">
+                  Asset Documents
+                  <span className="text-[12px] text-[#8C94A6] font-normal ml-2">
+                    ({assetDocs.length}/{MAX_DOCUMENTS})
+                  </span>
+                </Label>
+              </div>
+
+              {/* Upload Area */}
+              {assetDocs.length < MAX_DOCUMENTS && (
+                <Card className="border-2 border-dashed border-[#E4E3EC] bg-gradient-to-b from-[#FFF8F0] to-white shadow-none hover:border-[#F59E0B] transition-colors">
+                  <CardContent className="p-4">
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx"
                       onChange={handleDocumentSelect}
+                      multiple
                       className="hidden"
                       id="document-upload"
                     />
                     <label
                       htmlFor="document-upload"
-                      className="cursor-pointer w-full flex flex-col items-center justify-center text-center"
+                      className="cursor-pointer w-full flex items-center gap-4"
                     >
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <File className="w-7 h-7 text-gray-400" />
-                        <p className="text-[13px] text-gray-600 leading-snug">
-                          Drag your Document here or{" "}
-                          <span className="text-[#563BB5] font-medium">
-                            choose to browse
-                          </span>
+                      <div className="p-2 rounded-lg bg-[#F59E0B]/10">
+                        <File className="w-5 h-5 text-[#F59E0B]" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-[13px] font-medium text-gray-700">
+                          Upload documents
+                        </p>
+                        <p className="text-[11px] text-[#8C94A6]">
+                          PDF, DOC, DOCX (max {MAX_DOCUMENTS} files, 10MB each)
                         </p>
                       </div>
+                      <Upload className="w-5 h-5 text-[#8C94A6]" />
                     </label>
                   </CardContent>
                 </Card>
               )}
-              <p className="text-[12px] font-medium text-[#8C94A6] mt-1">
-                *We only support Pdfs and .doc and .docx under 10MB
-              </p>
+
+              {/* Documents List */}
+              {assetDocs.length > 0 && (
+                <div className="space-y-2">
+                  {assetDocs.map((doc, index) => (
+                    <Card
+                      key={index}
+                      className="border border-[#E4E3EC] shadow-none"
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="p-2 rounded-md bg-[#563BB5]/10 flex-shrink-0">
+                              <File className="w-4 h-4 text-[#563BB5]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-medium text-gray-900 truncate">
+                                {doc.name}
+                              </p>
+                              <p className="text-[11px] text-[#8C94A6]">
+                                {(doc.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeDocument(index)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          <DialogFooter className="mt-4">
+          <DialogFooter className="mt-6 gap-3">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={isPending}
-              className="mr-2"
+              onClick={() => {
+                resetForm();
+                setOpen(false);
+              }}
+              disabled={loading}
+              className="px-6 border-[#E4E3EC] text-[#49576D] hover:bg-[#F4F3F7]"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isPending}
-              className="bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] cursor-pointer text-white px-4 py-2 rounded-[10px] flex items-center gap-2"
+              disabled={loading}
+              className="bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90 cursor-pointer text-white px-6 py-2 rounded-[10px] flex items-center gap-2 disabled:opacity-50"
             >
-              {isPending ? "Adding..." : "Add Asset"}
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  Add Asset
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>
