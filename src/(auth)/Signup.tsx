@@ -1,58 +1,51 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React, { useState } from "react";
-import api from "@/lib/api";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { useSignup } from "@/hook/useSignup";
+
+interface SignupFormData {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  userType: string;
+}
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { signup, loading } = useSignup();
+
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    userType: "borrower",
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<SignupFormData>({
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+      userType: "borrower",
+    },
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value } as typeof prev));
-  };
+  const password = watch("password");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-
-    setLoading(true);
-    try {
-      const res = await api.post("/auth/register", {
-        fullName: form.name,
-        email: form.email,
-        password: form.password,
-        userType: form.userType,
-      });
-      console.log(res);
-      const { token, user } = res.data.data;
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      navigate("/informations");
-    } catch (err: unknown) {
-      console.error("Registration failed:", err);
-      if (axios.isAxiosError(err)) {
-        const message = (err.response?.data as { message?: string } | undefined)
-          ?.message;
-        setError(message ?? "Something went wrong");
-      } else {
-        setError("Something went wrong");
-      }
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const userTypeParam = searchParams.get("userType");
+    if (userTypeParam) {
+      setValue("userType", userTypeParam);
     }
+  }, [searchParams, setValue]);
+
+  const onSubmit = async (data: SignupFormData) => {
+    await signup(data);
   };
 
   return (
@@ -70,53 +63,36 @@ const RegisterPage = () => {
               Fill in your details to get started
             </p>
           </div>
-          <form className="flex flex-col gap-4 mt-4" onSubmit={handleSubmit}>
+          <form
+            className="flex flex-col gap-4 mt-4"
+            onSubmit={handleSubmit(onSubmit)}
+          >
             <div className="flex flex-col gap-1">
               <Label className="text-[#1A1A21] text-[13.78px] font-medium">
-                Company Name
-              </Label>
-              <Input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Enter your company name"
-                required
-                className="bg-[#F5F5F5] border border-[#F1F1F1] rounded-[10px] text-[#1A1A1A] placeholder:text-[#CBCBCB] shadow-none p-3 h-12 outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <Label className="text-[#1A1A21] text-[13.78px] font-medium">
-                Company Email
+                Email
               </Label>
               <Input
                 type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Enter your company email"
-                required
-                className="bg-[#F5F5F5] border border-[#F1F1F1] rounded-[10px] text-[#1A1A1A] placeholder:text-[#CBCBCB] shadow-none p-3 h-12 outline-none"
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: "Invalid email format",
+                  },
+                })}
+                placeholder="Enter your email"
+                className={`bg-[#F5F5F5] border rounded-[10px] text-[#1A1A1A] placeholder:text-[#CBCBCB] shadow-none p-3 h-12 outline-none ${
+                  errors.email ? "border-red-500" : "border-[#F1F1F1]"
+                }`}
               />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
-            <div className=" flex-col gap-1 hidden">
-              <Label className="text-[#1A1A21] text-[13.78px] font-medium">
-                User Type
-              </Label>
-              <select
-                name="userType"
-                value={form.userType}
-                onChange={handleChange}
-                required
-                className="bg-[#F5F5F5] border border-[#F1F1F1] rounded-[10px] text-[#1A1A1A] shadow-none p-3 h-12 outline-none"
-              >
-                <option value="">Select a type</option>
-                <option value="borrower">Borrower</option>
-                <option value="lender">Lender</option>
-              </select>
-            </div>
+            <input type="hidden" {...register("userType")} />
 
             <div className="flex flex-col gap-1">
               <Label className="text-[#1A1A21] text-[13.78px] font-medium">
@@ -125,12 +101,18 @@ const RegisterPage = () => {
               <div className="flex relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
+                  {...register("password", {
+                    required: "Password is required",
+                    pattern: {
+                      value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+                      message:
+                        "Password must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 number",
+                    },
+                  })}
                   placeholder="Enter password"
-                  required
-                  className="bg-[#F5F5F5] border border-[#F1F1F1] text-sm rounded-[10px] text-[#1A1A21] placeholder:text-[#CBCBCB] p-3 h-12 w-full outline-none"
+                  className={`bg-[#F5F5F5] border text-sm rounded-[10px] text-[#1A1A21] placeholder:text-[#CBCBCB] p-3 h-12 w-full outline-none ${
+                    errors.password ? "border-red-500" : "border-[#F1F1F1]"
+                  }`}
                 />
                 <button
                   type="button"
@@ -140,11 +122,46 @@ const RegisterPage = () => {
                   {showPassword ? "hide" : "show"}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
+            <div className="flex flex-col gap-1">
+              <Label className="text-[#1A1A21] text-[13.78px] font-medium">
+                Confirm Password
+              </Label>
+              <div className="flex relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  {...register("confirmPassword", {
+                    required: "Please confirm your password",
+                    validate: (value) =>
+                      value === password || "Passwords do not match",
+                  })}
+                  placeholder="Confirm your password"
+                  className={`bg-[#F5F5F5] border text-sm rounded-[10px] text-[#1A1A21] placeholder:text-[#CBCBCB] p-3 h-12 w-full outline-none ${
+                    errors.confirmPassword
+                      ? "border-red-500"
+                      : "border-[#F1F1F1]"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 border border-[#F4F3F7] bg-[#FFFFFF] rounded-[10px] text-[#CBCBCB] text-sm px-2"
+                >
+                  {showConfirmPassword ? "hide" : "show"}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
 
             <button
               type="submit"

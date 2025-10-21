@@ -3,17 +3,21 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const UserTypePage = () => {
-  const [selected, setSelected] = useState<"asset" | "liquidity" | null>(null);
+  const [selected, setSelected] = useState<"borrower" | "lender" | null>(null);
   const navigate = useNavigate();
 
-  const handleSelect = (type: "asset" | "liquidity") => {
+  const handleSelect = (type: "borrower" | "lender") => {
     setSelected(type);
   };
 
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected) return;
-    navigate(selected === "asset" ? "/signup" : "/liquidity-informations");
+    navigate(
+      selected === "borrower"
+        ? `/signup?userType=${selected}`
+        : `/liquidity-informations?userType=${selected}`
+    );
   };
 
   return (
@@ -41,16 +45,16 @@ const UserTypePage = () => {
           <div className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-6 w-full">
             {/* Asset Manager */}
             <div
-              onClick={() => handleSelect("asset")}
+              onClick={() => handleSelect("borrower")}
               className={`rounded-[20px] p-[4px] w-full md:w-1/2 cursor-pointer transition-all ${
-                selected === "asset"
+                selected === "borrower"
                   ? "bg-gradient-to-br from-[#439EFF] to-[#5B1E9F]"
                   : "bg-[#F4F3F7]"
               }`}
             >
               <div
                 className={`rounded-[18px] p-6 flex flex-col gap-3 h-full ${
-                  selected === "asset" ? "bg-[#F2F7FF]" : "bg-white"
+                  selected === "borrower" ? "bg-[#F2F7FF]" : "bg-white"
                 }`}
               >
                 <img
@@ -70,16 +74,16 @@ const UserTypePage = () => {
 
             {/* Liquidity Provider */}
             <div
-              onClick={() => handleSelect("liquidity")}
+              onClick={() => handleSelect("lender")}
               className={`rounded-[20px] p-[4px] w-full md:w-1/2 cursor-pointer transition-all ${
-                selected === "liquidity"
+                selected === "lender"
                   ? "bg-gradient-to-br from-[#439EFF] to-[#5B1E9F]"
                   : "bg-[#F4F3F7]"
               }`}
             >
               <div
                 className={`rounded-[18px] p-6 flex flex-col gap-3 h-full ${
-                  selected === "liquidity" ? "bg-[#F2F7FF]" : "bg-white"
+                  selected === "lender" ? "bg-[#F2F7FF]" : "bg-white"
                 }`}
               >
                 <img

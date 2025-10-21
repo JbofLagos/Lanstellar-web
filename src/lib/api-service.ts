@@ -28,8 +28,14 @@ export interface Asset {
 export interface User {
   _id: string;
   email: string;
-  fullName: string;
+  fullName?: string;
+  username?: string;
   walletAddress?: string;
+  userType?: string;
+  address?: string;
+  country?: string;
+  contact?: string;
+  profilePicture?: string;
 }
 
 export interface LoanRequest {
@@ -79,15 +85,14 @@ class ApiService {
           throw new Error(`Unsupported HTTP method: ${method}`);
       }
 
+      // Backend already returns { success, message, data } structure
+      const apiResponse = response.data;
+
       if (showSuccessToast && successMessage) {
         toast.success(successMessage);
       }
 
-      return {
-        success: true,
-        data: response.data,
-        message: response.data?.message,
-      };
+      return apiResponse;
     } catch (error) {
       console.error(`API ${method} ${endpoint} failed:`, error);
       let errorMessage = "Something went wrong. Please try again.";
@@ -142,8 +147,8 @@ class ApiService {
     return this.request<User>("GET", "/auth/me");
   };
 
-  updateUser = async (data: Partial<User>) => {
-    return this.request("PUT", "/auth/me", data, {
+  updateUser = async (data: Partial<User> | FormData) => {
+    return this.request("PUT", "/auth/update-user", data, {
       showSuccessToast: true,
       successMessage: "Profile updated successfully!",
     });
@@ -160,10 +165,10 @@ class ApiService {
   };
 
   register = async (userData: {
-    fullName: string;
     email: string;
     password: string;
     confirmPassword: string;
+    userType?: string;
   }) => {
     return this.request<{ user: User; token: string }>(
       "POST",

@@ -18,6 +18,8 @@ import LoanPage from "./LpDashboard/pages/Loans";
 import RegisterPage from "./(auth)/Signup";
 import UserTypePage from "./(auth)/UserSelection";
 import Informations from "./(auth)/Informations";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { GuestRoute } from "./components/GuestRoute";
 
 const HomePage = () => {
   return (
@@ -35,65 +37,116 @@ const HomePage = () => {
 const App = () => {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/usertype" element={<UserTypePage />} />
-      <Route path="/informations" element={<Informations />} />
-      <Route path="/signup" element={<RegisterPage />} />
+      
+      {/* Guest Routes - Redirect to dashboard if already logged in */}
+      <Route
+        path="/login"
+        element={
+          <GuestRoute>
+            <LoginPage />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/usertype"
+        element={
+          <GuestRoute>
+            <UserTypePage />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          <GuestRoute>
+            <RegisterPage />
+          </GuestRoute>
+        }
+      />
+
+      {/* Protected Routes - Requires Authentication */}
+      <Route
+        path="/setup-profile"
+        element={
+          <ProtectedRoute>
+            <Informations />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Borrower Dashboard Routes - Only for borrower user type */}
       <Route
         path="/dashboard"
         element={
-          <DashboardLayout>
-            <DashboardPage />
-          </DashboardLayout>
-        }
-      />
-      <Route
-        path="/lpdashboard"
-        element={
-          <LpDashboardLayout>
-            <LpDashboardPage />
-          </LpDashboardLayout>
-        }
-      />
-      <Route
-        path="/lpdashboard/expected"
-        element={
-          <LpDashboardLayout>
-            <ExpectedPage />
-          </LpDashboardLayout>
-        }
-      />
-      <Route
-        path="/lpdashboard/loans"
-        element={
-          <LpDashboardLayout>
-            <LoanPage />
-          </LpDashboardLayout>
+          <ProtectedRoute allowedUserTypes={["borrower"]}>
+            <DashboardLayout>
+              <DashboardPage />
+            </DashboardLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/dashboard/assets"
         element={
-          <DashboardLayout>
-            <AssetsPage />
-          </DashboardLayout>
+          <ProtectedRoute allowedUserTypes={["borrower"]}>
+            <DashboardLayout>
+              <AssetsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/dashboard/loans"
         element={
-          <DashboardLayout>
-            <LoansPage />
-          </DashboardLayout>
+          <ProtectedRoute allowedUserTypes={["borrower"]}>
+            <DashboardLayout>
+              <LoansPage />
+            </DashboardLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/dashboard/settings"
         element={
-          <DashboardLayout>
-            <SettingsPage />
-          </DashboardLayout>
+          <ProtectedRoute allowedUserTypes={["borrower"]}>
+            <DashboardLayout>
+              <SettingsPage />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Lender Dashboard Routes - Only for lender user type */}
+      <Route
+        path="/lpdashboard"
+        element={
+          <ProtectedRoute allowedUserTypes={["lender"]}>
+            <LpDashboardLayout>
+              <LpDashboardPage />
+            </LpDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lpdashboard/expected"
+        element={
+          <ProtectedRoute allowedUserTypes={["lender"]}>
+            <LpDashboardLayout>
+              <ExpectedPage />
+            </LpDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lpdashboard/loans"
+        element={
+          <ProtectedRoute allowedUserTypes={["lender"]}>
+            <LpDashboardLayout>
+              <LoanPage />
+            </LpDashboardLayout>
+          </ProtectedRoute>
         }
       />
     </Routes>
