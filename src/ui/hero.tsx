@@ -16,7 +16,7 @@ const Hero = () => {
       {/* Content */}
       <div className="relative z-20 text-center max-w-3xl px-4 mt-5 space-y-7 sm:mt-20 ">
         <h1 className="text-4xl md:text-5xl lg:text-[64px] leading-tight md:leading-[56px] lg:leading-[72px] font-medium font-helvetica">
-          Stablecoin Lending,
+          Stablecoin Liquidity,
           <br className="hidden sm:block" /> For Real World Assets
         </h1>
 
