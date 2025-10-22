@@ -17,10 +17,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader2 } from "lucide-react";
 
-import { getCurrentUser } from "@/lib/auth";
-import api from "@/lib/api";
 import { toast } from "sonner";
+import { useCurrentUser } from "@/hook/useCurrentUser";
+import { useUpdateProfile } from "@/hook/useUpdateProfile";
 
 interface UserForm {
   fullName: string;
@@ -32,6 +33,12 @@ interface UserForm {
 }
 
 export function Profile() {
+  // Use the useCurrentUser hook to fetch user data
+  const { isLoadingUser, user, error } = useCurrentUser();
+
+  // Use the useUpdateProfile hook with redirectOnSuccess set to false
+  const { updateProfile, loading } = useUpdateProfile(false);
+
   const [formData, setFormData] = useState<UserForm>({
     fullName: "",
     email: "",
@@ -43,7 +50,6 @@ export function Profile() {
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field: keyof UserForm, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -72,50 +78,64 @@ export function Profile() {
     setFormData((prev) => ({ ...prev, profilePicture: "" }));
   };
 
+  // Set form data when user data is loaded
   useEffect(() => {
-    async function fetchUser() {
-      try {
-        const data = await getCurrentUser();
-        setFormData(data.data.user);
-        setAvatarUrl(data.data.user?.profilePicture || null);
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-      }
+    if (user) {
+      setFormData({
+        fullName: user.fullName || "",
+        email: user.email || "",
+        country: user.country || "",
+        address: user.address || "",
+        contact: user.contact || "",
+        profilePicture: user.profilePicture || "",
+      });
+      setAvatarUrl(user.profilePicture || null);
     }
-    fetchUser();
-  }, []);
+  }, [user]);
+
+  // Log any errors from the useCurrentUser hook
+  useEffect(() => {
+    if (error) {
+      console.error("Failed to fetch user:", error);
+    }
+  }, [error]);
 
   const handleSubmit = async () => {
     try {
-      setLoading(true);
+      // Prepare update data
+      const updateData = {
+        fullName: formData.fullName,
+        email: formData.email,
+        country: formData.country,
+        address: formData.address,
+        contact: formData.contact,
+        profilePicture: file,
+      };
 
-      const form = new FormData();
-      form.append("fullName", formData.fullName);
-      form.append("email", formData.email);
-      form.append("country", formData.country);
-      form.append("address", formData.address);
-      form.append("contact", formData.contact);
+      // Use the updateProfile mutation from the hook
+      const response = await updateProfile(updateData);
 
-      if (file) {
-        form.append("profilePicture", file);
-      }
-
-      const res = await api.put("/auth/update-user", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      toast.success("Profile updated successfully!");
-      setFormData(res.data.user);
-      if (res.data.user.profilePicture) {
-        setAvatarUrl(res.data.user.profilePicture);
+      // Update avatar URL if profile picture was updated
+      if (response.success && response.data?.profilePicture) {
+        setAvatarUrl(response.data.profilePicture);
       }
     } catch (err) {
       console.error("Failed to update user:", err);
-      toast.error("Failed to update profile");
-    } finally {
-      setLoading(false);
+      // Toast is handled by the hook
     }
   };
+
+  // Show loading state while fetching user data
+  if (isLoadingUser) {
+    return (
+      <Card className="shadow-none border-none pt-0 w-11/12 mx-auto">
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <span>Loading profile information...</span>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="shadow-none border-none pt-0 w-11/12 mx-auto">

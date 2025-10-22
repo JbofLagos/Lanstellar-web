@@ -17,13 +17,10 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-import {
-  getAssets,
-  getCurrentUser,
-  requestLoan,
-  type Asset,
-  type LoanRequest,
-} from "@/lib/api-service";
+import { type LoanRequest } from "@/lib/api-service";
+import { useAssets } from "@/hook/useAssets";
+import { useRequestLoan } from "@/hook/useRequestLoan";
+import { useCurrentUser } from "@/hook/useCurrentUser";
 
 // Using LoanRequest from api-service for payload shape
 
@@ -44,10 +41,15 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
   const [amount, setAmount] = useState<string>("");
   const [duration, setDuration] = useState<string>("");
   const [borrower, setBorrower] = useState<string>("");
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [assetsLoading, setAssetsLoading] = useState(true);
-  const [userLoading, setUserLoading] = useState(true);
-  const [loanLoading, setLoanLoading] = useState(false);
+
+  // Use the useAssets hook
+  const { assets, error: assetsError } = useAssets();
+  const {
+    submitLoanRequest,
+    isSubmittingLoan,
+    isLoanSubmitted,
+    error: loanError,
+  } = useRequestLoan();
 
   const repaymentPlans: RepaymentPlan[] = [
     { id: "one", installments: 1, percent: 5 },
@@ -55,48 +57,37 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
     { id: "three", installments: 3, percent: 15 },
   ];
 
+  const { user: userData } = useCurrentUser();
+
+  // Set borrower when user data is available
   useEffect(() => {
-    const fetchAssets = async () => {
-      setAssetsLoading(true);
-      try {
-        const response = await getAssets();
-        console.log(response);
-        if (response?.success) {
-          const assetsData = Array.isArray(response?.data) ? response.data : [];
-          setAssets(assetsData);
-        } else {
-          console.error("Failed to fetch assets:", response?.message);
-        }
-      } catch (error) {
-        console.error("Error fetching assets:", error);
-      } finally {
-        setAssetsLoading(false);
-      }
-    };
+    if (userData?._id) {
+      setBorrower(userData._id);
+    }
+  }, [userData?._id]);
 
-    fetchAssets();
-  }, []);
-
+  // Log any errors from the assets hook
   useEffect(() => {
-    const fetchUser = async () => {
-      setUserLoading(true);
-      try {
-        const response = await getCurrentUser();
-        console.log("borrower", response);
-        if (response.success && response.data && response.data._id) {
-          setBorrower(response.data._id);
-        } else {
-          console.error("Failed to fetch user:", response.message);
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      } finally {
-        setUserLoading(false);
-      }
-    };
+    if (assetsError) {
+      console.error("Error fetching assets:", assetsError);
+    }
+  }, [assetsError]);
 
-    fetchUser();
-  }, []);
+  // Handle loan submission success
+  useEffect(() => {
+    if (isLoanSubmitted) {
+      resetForm();
+      // Toast is now handled by the hook
+      onSuccess?.();
+    }
+  }, [isLoanSubmitted, onSuccess]);
+
+  // Log loan errors (toast is now handled by the hook)
+  useEffect(() => {
+    if (loanError) {
+      console.error("Loan request failed:", loanError);
+    }
+  }, [loanError]);
 
   const getMaxLoanAmount = (): number => {
     const selectedAsset = assets.find((asset) => asset._id === assetId);
@@ -109,9 +100,6 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
     const numValue = Number(value);
     const maxAmount = getMaxLoanAmount();
     if (numValue > maxAmount && maxAmount > 0) {
-      toast.error(
-        `Maximum loan amount for this asset is $${maxAmount.toLocaleString()}`
-      );
       return false;
     }
     return true;
@@ -131,6 +119,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
     setAssetId("");
     setAmount("");
     setDuration("");
+    // Do not reset borrower as it is user-specific
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -141,7 +130,12 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
     if (!assetId) return toast.error("Please select a collateral asset");
     if (!amount || Number(amount) <= 0)
       return toast.error("Please enter a valid loan amount");
-    if (!validateLoanAmount(amount)) return;
+    if (!validateLoanAmount(amount)) {
+      const maxAmount = getMaxLoanAmount();
+      return toast.error(
+        `Maximum loan amount for this asset is $${maxAmount.toLocaleString()}`
+      );
+    }
     if (!duration) return toast.error("Please select a loan duration");
     if (!borrower)
       return toast.error(
@@ -161,34 +155,10 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
       interestRate: selectedPlan.percent,
     };
 
-    setLoanLoading(true);
-    try {
-      const response = await requestLoan(formData);
-      if (response.success) {
-        resetForm();
-        toast.success("Loan request submitted successfully");
-        onSuccess?.();
-      } else {
-        throw new Error(response.message || "Failed to request loan");
-      }
-    } catch (err) {
-      console.error("Loan request failed:", err);
-      toast.error("Something went wrong while requesting the loan.");
-    } finally {
-      setLoanLoading(false);
-    }
+    // Use the submitLoanRequest function from the hook
+    submitLoanRequest(formData);
+    // Success and error handling is done in the useEffect hooks
   };
-
-  if (assetsLoading || userLoading) {
-    return (
-      <div className="w-full">
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          <span>Loading your information...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-fit max-w-full">
@@ -207,7 +177,6 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
             onChange={(e) => setPurpose(e.target.value)}
             placeholder="What do you need the loan for?"
             className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5]"
-            disabled={loanLoading}
           />
         </div>
 
@@ -216,11 +185,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
           <Label className="text-[13.78px] font-medium text-[#1A1A21]">
             Select Eligible Collateral
           </Label>
-          <Select
-            value={assetId}
-            onValueChange={setAssetId}
-            disabled={loanLoading}
-          >
+          <Select value={assetId} onValueChange={setAssetId}>
             <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5]">
               <SelectValue placeholder="Select asset from your list" />
             </SelectTrigger>
@@ -271,7 +236,6 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
             onChange={handleAmountChange}
             placeholder="Enter amount ($)"
             className="w-[454px] h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5]"
-            disabled={loanLoading || !assetId}
           />
           <div className="flex flex-col gap-1">
             <span className="text-[#A19821] font-medium text-[12px]">
@@ -290,11 +254,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
           <Label className="text-[13.78px] font-medium text-[#1A1A21]">
             Select Loan Duration
           </Label>
-          <Select
-            value={duration}
-            onValueChange={setDuration}
-            disabled={loanLoading}
-          >
+          <Select value={duration} onValueChange={setDuration}>
             <SelectTrigger className="w-full h-[37px] rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5]">
               <SelectValue placeholder="Select duration" />
             </SelectTrigger>
@@ -328,8 +288,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
                   "cursor-pointer block rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-md",
                   plan === p.id
                     ? "border-[#5B1E9F] ring-[1px] ring-[#5B1E9F] bg-[#5B1E9F]/5"
-                    : "border-muted hover:border-[#5B1E9F]/30",
-                  loanLoading && "opacity-50 cursor-not-allowed"
+                    : "border-muted hover:border-[#5B1E9F]/30"
                 )}
               >
                 <Card className="border-0 bg-transparent shadow-none h-[64px] w-[112px] p-0">
@@ -360,10 +319,10 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
         <div className="mt-6">
           <Button
             type="submit"
-            disabled={loanLoading || assets.length === 0 || !borrower}
+            disabled={isSubmittingLoan || assets.length === 0 || !borrower}
             className="bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] cursor-pointer text-white rounded-[10px] w-full h-[40px] disabled:opacity-50"
           >
-            {loanLoading ? (
+            {isSubmittingLoan ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" /> Submitting...
               </>

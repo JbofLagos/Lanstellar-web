@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Table,
@@ -25,7 +26,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import DocsPreview from "../assets/docsPreview";
-import { deleteLoan, getLoans } from "@/lib/api-service";
+import { deleteLoan } from "@/lib/api-service";
+import { useLoans } from "@/hook/useLoans";
 import {
   Empty,
   EmptyContent,
@@ -69,62 +71,46 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
+interface Loan {
+  _id: string;
+  loanPurpose: string;
+  assetId: {
+    assetTitle: string;
+    assetCategory: string;
+    assetLocation: string;
+    assetWorth: string;
+    verified: string;
+    docs: string[];
+  };
+  amount: number;
+  duration: string;
+  status: string;
+  createdAt: string;
+  due?: string;
+  interestRate: number;
+  paymentPlan: number;
+}
+
 const LoanOverview = () => {
-  interface Loan {
-    id: string;
-    _id: string;
-    loanPurpose: string;
-    assetId: {
-      assetTitle: string;
-      assetCategory: string;
-      assetLocation: string;
-      assetWorth: string;
-      verified: string;
-      docs: string[];
-    };
-    amount: number;
-    duration: string;
-    status: string;
-    createdAt: string;
-    due?: string;
-    interestRate: number;
-    paymentPlan: number;
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
+  const [open, setOpen] = useState<boolean>(false);
+
+  const { isLoadingLoans, loans, error, refetch: fetchLoans } = useLoans();
+
+  // Log any errors from the hook
+  if (error) {
+    console.error("Error fetching loans:", error);
   }
 
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
-  const [open, setOpen] = useState(false);
-
-  const fetchLoans = async () => {
-    setLoading(true);
-    try {
-      const response = await getLoans();
-      if (response.success) {
-        const data = response.data as { loans?: Loan[] };
-        setLoans(data.loans || []);
-      } else {
-        console.error("Error fetching loans:", response.message);
-      }
-    } catch (error) {
-      console.error("Error fetching loans:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLoans();
-  }, []);
-
-  const handleDeleteLoan = async () => {
+  const handleDeleteLoan = async (): Promise<void> => {
     if (!selectedLoan?._id) return;
     setIsDeleting(true);
     try {
       const response = await deleteLoan(selectedLoan._id);
       if (response.success) {
-        setLoans((prev) => prev.filter((l) => l._id !== selectedLoan._id));
+        // Refetch loans after successful deletion
+        fetchLoans();
         setOpen(false);
       } else {
         console.error("Failed to delete loan:", response.message);
@@ -136,7 +122,7 @@ const LoanOverview = () => {
     }
   };
 
-  if (loading) {
+  if (isLoadingLoans) {
     return (
       <div className="flex justify-center items-center py-10 text-[#8C94A6]">
         Loading loans...
@@ -222,7 +208,7 @@ const LoanOverview = () => {
                   key={loan._id}
                   className="hover:bg-[#F8F8FB] transition-colors cursor-pointer"
                   onClick={() => {
-                    setSelectedLoan(loan);
+                    setSelectedLoan(loan as unknown as Loan);
                     setOpen(true);
                   }}
                 >
@@ -230,7 +216,9 @@ const LoanOverview = () => {
                     {loan.loanPurpose}
                   </TableCell>
                   <TableCell className="text-[#1A1A21]">
-                    {loan.assetId.assetTitle}
+                    {typeof loan.assetId === "string"
+                      ? loan.assetId
+                      : (loan.assetId as { assetTitle: string }).assetTitle}
                   </TableCell>
                   <TableCell className="text-[#1A1A21] font-semibold">
                     ${loan.amount}
@@ -239,11 +227,12 @@ const LoanOverview = () => {
                     {loan.duration}
                   </TableCell>
                   <TableCell className="text-[#1A1A21]">
-                    <StatusBadge status={loan.status} />
+                    <StatusBadge status={loan.status ?? ""} />
                   </TableCell>
                   <TableCell className="text-[#1A1A21] gap-3 flex flex-col">
-                    <div>{loan.createdAt.slice(0, 10)}</div>
-                    {loan.due && (
+                    <div>{loan?.createdAt?.slice(0, 10) || ""}</div>
+
+                    {(loan as any).due && (
                       <span className="text-[#49576D] flex flex-row items-center font-medium text-[12.06px]">
                         <img
                           src={"/icons/arrow.svg"}
@@ -251,7 +240,7 @@ const LoanOverview = () => {
                           height={24}
                           alt="arrow"
                         />
-                        {loan.due}
+                        <div>{(loan as any).due?.slice(0, 10) || ""}</div>
                       </span>
                     )}
                   </TableCell>
