@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { Profile } from "../components/settings/profile";
 import Notification from "../components/settings/notification";
+import { Zap } from "lucide-react";
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -46,13 +47,35 @@ const SettingsPage = () => {
           </TabsContent>
 
           <TabsContent value="security" className="mt-4 p-4 border rounded">
-            <h3 className="font-semibold mb-2">Security Settings</h3>
-            <p>Update your security and privacy settings.</p>
+            <div className="text-center">
+              <div className="bg-gray-800 rounded-lg p-8 border border-gray-700 flex flex-col justify-center ">
+                <div className="text-4xl mb-4 flex flex-col justify-center mx-auto text-center">
+                  <Zap fill="yellow" color="yellow" size={60} />
+                </div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                  Our engineering team is working on this section
+                </h1>
+                <p className="text-gray-400">
+                  Please check back later for updates
+                </p>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="help" className="mt-4 p-4 border rounded">
-            <h3 className="font-semibold mb-2">Help and Support</h3>
-            <p>Get help and contact support.</p>
+            <div className="text-center">
+              <div className="bg-gray-800 rounded-lg p-8 border border-gray-700 flex flex-col justify-center ">
+                <div className="text-4xl mb-4 flex flex-col justify-center mx-auto text-center">
+                  <Zap fill="yellow" color="yellow" size={60} />
+                </div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                  Our engineering team is working on this section
+                </h1>
+                <p className="text-gray-400">
+                  Please check back later for updates
+                </p>
+              </div>
+            </div>
           </TabsContent>
         </div>
       </Tabs>

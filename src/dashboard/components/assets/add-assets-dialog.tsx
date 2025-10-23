@@ -190,7 +190,7 @@ const AddAssetsDialog = () => {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="w-full !max-w-[600px] border-[4px] border-[#F8F8F8] rounded-[20px] overflow-y-auto scrollbar-hide">
+      <DialogContent className="w-full h-[90vh] !max-w-[600px] border-[4px] border-[#F8F8F8] rounded-[20px] overflow-y-auto scrollbar-hide">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
             <DialogTitle className="text-[20px] font-semibold text-black">
