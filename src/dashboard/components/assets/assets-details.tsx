@@ -133,7 +133,7 @@ const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
         {/* Left Column - Images and Main Info */}
         <div className="space-y-4">
           {/* Image Gallery */}
-          <Card className="border border-[#E4E3EC] shadow-sm overflow-hidden rounded-[16px]">
+          <Card className="border border-[#E4E3EC] shadow-sm overflow-hidden rounded-[16px] py-0">
             <CardContent className="p-0">
               {/* Main Image Display */}
               <div className="relative bg-gradient-to-br from-[#F8F9FF] to-[#FFF8F0] group">
