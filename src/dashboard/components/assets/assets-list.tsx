@@ -144,7 +144,7 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
 
   if (sortedAssets.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 h-screen">
+      <div className="flex flex-col items-center justify-center gap-4 h-[70vh]">
         <Empty>
           <EmptyHeader>
             <EmptyMedia
@@ -215,8 +215,8 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
                   <h2 className="text-[14px] capitalize font-semibold text-[#1A1A21] line-clamp-1">
                     {asset.assetTitle}
                   </h2>
-                  <p className="text-[13px] text-[#8C94A6] font-medium flex items-center gap-1">
-                    <div className="w-8">
+                  <p className="text-[13px] text-[#8C94A6] font-medium flex items-center gap-1.5">
+                    <div className="">
                       <MapPin size={20} />
                     </div>
                     {asset.assetLocation}

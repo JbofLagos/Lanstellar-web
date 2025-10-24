@@ -13,11 +13,7 @@ const UserTypePage = () => {
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected) return;
-    navigate(
-      selected === "borrower"
-        ? `/signup?userType=${selected}`
-        : `/liquidity-informations?userType=${selected}`
-    );
+    navigate(`/signup?userType=${selected}`);
   };
 
   return (
