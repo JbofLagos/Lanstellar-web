@@ -1,8 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import { Zap } from "lucide-react";
 import { Profile } from "../components/settings/profile";
 import Notification from "../components/settings/notification";
-import { Zap } from "lucide-react";
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("profile");
 

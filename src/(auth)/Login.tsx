@@ -111,7 +111,7 @@ const LoginPage = () => {
             <hr className=" border-t border-t-[#CBCBCB]/70" />
             <p className="text-center text-[#8C94A6] text-[13.78px] font-medium">
               Don&apos;t have an account?{" "}
-              <a href="/signup" className="text-[#439EFF]">
+              <a href="/usertype" className="text-[#5B1E9F]">
                 Sign Up{" "}
               </a>
             </p>

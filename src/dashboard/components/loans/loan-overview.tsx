@@ -132,7 +132,7 @@ const LoanOverview = () => {
 
   if (loans.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 h-screen">
+      <div className="flex flex-col items-center justify-center gap-4 h-[58vh]">
         <Empty>
           <EmptyHeader>
             <EmptyMedia
