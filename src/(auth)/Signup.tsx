@@ -31,7 +31,7 @@ const RegisterPage = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      userType: "borrower",
+      userType: "",
     },
   });
 
@@ -92,7 +92,10 @@ const RegisterPage = () => {
               )}
             </div>
 
-            <input type="hidden" {...register("userType")} />
+            <input
+              type="hidden"
+              {...register("userType", { required: "User type is required" })}
+            />
 
             <div className="flex flex-col gap-1">
               <Label className="text-[#1A1A21] text-[13.78px] font-medium">

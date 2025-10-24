@@ -37,10 +37,7 @@ const HomePage = () => {
 const App = () => {
   return (
     <Routes>
-      {/* Public Routes */}
       <Route path="/" element={<HomePage />} />
-
-      {/* Guest Routes - Redirect to dashboard if already logged in */}
       <Route
         path="/login"
         element={
@@ -145,6 +142,16 @@ const App = () => {
           <ProtectedRoute allowedUserTypes={["lender"]}>
             <LpDashboardLayout>
               <LoanPage />
+            </LpDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/lpdashboard/settings"
+        element={
+          <ProtectedRoute allowedUserTypes={["lender"]}>
+            <LpDashboardLayout>
+              <SettingsPage />
             </LpDashboardLayout>
           </ProtectedRoute>
         }
