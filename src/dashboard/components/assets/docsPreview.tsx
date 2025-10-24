@@ -31,7 +31,6 @@ const DocsPreview: React.FC<DocsPreviewProps> = ({ docs }) => {
 
   const pdfUrl = normalizedDocs[0]?.cloudinaryUrl || null;
   const fileName = normalizedDocs[0]?.filename || "";
-  console.log("DocsPreview pdfUrl:", pdfUrl);
 
   return (
     <Sheet>

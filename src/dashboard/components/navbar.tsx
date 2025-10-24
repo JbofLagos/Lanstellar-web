@@ -30,7 +30,9 @@ const Navbar = () => {
       <div>
         <h2 className="text-[24px] text-[#49576D]">
           Welcome{" "}
-          <span className="text-black">{user?.fullName || "Guest"} 👋,</span>
+          <span className="text-black">
+            {user?.fullName || user?.companyName || "Guest"} 👋,
+          </span>
         </h2>
       </div>
 
@@ -49,7 +51,7 @@ const Navbar = () => {
               </Avatar>
               <div className="flex flex-col gap-1 items-start">
                 <p className="text-sm font-medium text-[#1A1A21]">
-                  {user?.fullName || "Guest"}
+                  {user?.fullName || user?.companyName || "Guest"}
                 </p>
                 <p className="text-xs text-[#8C94A6] truncate">
                   {user?.companyEmail || user?.email || ""}
@@ -65,7 +67,7 @@ const Navbar = () => {
             {/* User Info Section */}
             <div className="px-3 py-2 mb-2">
               <p className="text-sm font-medium text-[#1A1A21]">
-                {user?.fullName || "Guest"}
+                {user?.fullName || user?.companyName || "Guest"}
               </p>
               <p className="text-xs text-[#8C94A6] truncate">
                 {user?.companyEmail || user?.email || ""}

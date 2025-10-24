@@ -356,14 +356,29 @@ const AddAssetsDialog = () => {
                 htmlFor="assetDescription"
                 className="text-[14px] font-medium text-[#1A1A21]"
               >
-                Asset Description
+                Asset Description <span className="text-red-500">*</span>
               </Label>
               <Textarea
                 id="assetDescription"
-                {...register("assetDescription")}
+                {...register("assetDescription", {
+                  required: "Asset description is required",
+                  minLength: {
+                    value: 10,
+                    message: "Description must be at least 10 characters long",
+                  },
+                })}
                 placeholder="Provide a detailed description of the asset..."
-                className="w-full min-h-[80px] resize-none rounded-[10px] border border-[#F1F1F1] bg-[#F5F5F5] px-4 py-3 text-[14px] text-[#333]"
+                className={`w-full min-h-[80px] resize-none rounded-[10px] border bg-[#F5F5F5] px-4 py-3 text-[14px] text-[#333] ${
+                  errors.assetDescription
+                    ? "border-red-500"
+                    : "border-[#F1F1F1]"
+                }`}
               />
+              {errors.assetDescription && (
+                <p className="text-red-500 text-xs">
+                  {errors.assetDescription.message}
+                </p>
+              )}
             </div>
 
             {/* Images Upload - Up to 5 */}
@@ -448,7 +463,7 @@ const AddAssetsDialog = () => {
             <div className="grid gap-3">
               <div className="flex items-center justify-between">
                 <Label className="text-[14px] font-medium text-[#1A1A21]">
-                  Asset Documents
+                  Asset Documents <span className="text-red-500">*</span>
                   <span className="text-[12px] text-[#8C94A6] font-normal ml-2">
                     ({assetDocs.length}/{MAX_DOCUMENTS})
                   </span>

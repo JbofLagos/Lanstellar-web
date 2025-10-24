@@ -4,7 +4,6 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Loader,
   Trash2,
   MapPin,
   DollarSign,
@@ -15,24 +14,26 @@ import {
 } from "lucide-react";
 import DocsPreview from "./docsPreview";
 import { type Asset } from "@/lib/api-service";
-import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { deleteAsset } from "@/lib/api-service";
-
-type TimelineEntry = {
-  date: string;
-  title: string;
-  content: string;
-};
+import { useDeleteAsset } from "@/hook/useAssets";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
+import RequestLoanDialog from "../loans/request-loan-dialog";
 
 interface AssetDetailsModalProps {
   asset: Asset;
 }
 
 const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
-  const queryClient = useQueryClient();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showRequestLoanDialog, setShowRequestLoanDialog] = useState(false);
+  const { deleteAssetMutation, loading: isDeleting } = useDeleteAsset();
+
+  // Helper function to check if asset is verified (handles both boolean and string)
+  const isVerified =
+    asset.verified === true || String(asset.verified) === "true";
+
+  // Check if loan has already been requested
+  const hasLoanRequested = asset.loanStatus === true;
 
   // Get all images from the asset
   const images =
@@ -44,79 +45,9 @@ const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
           )}`,
         ];
 
-  const timelineData: TimelineEntry[] = [
-    {
-      date: asset.createdAt
-        ? new Date(asset.createdAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : "Recently",
-      title: `${asset.assetTitle} added to system`,
-      content: "Asset Created: Company Admin",
-    },
-    {
-      date: asset.createdAt
-        ? new Date(asset.createdAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : "Recently",
-      title: `Asset Valued: $${
-        typeof asset.assetWorth === "number"
-          ? asset.assetWorth.toLocaleString()
-          : parseFloat(String(asset.assetWorth) || "0").toLocaleString()
-      } — ${asset.verified === "true" ? "Docs Verified" : "Docs Pending"}`,
-      content:
-        asset.verified === "true"
-          ? "AI Verification Completed: Agent"
-          : "Verification Pending: Agent",
-    },
-    ...(asset.verified === "true"
-      ? [
-          {
-            date: "Recently",
-            title: "Asset ready for loan requests",
-            content: "Asset Available: System",
-          },
-        ]
-      : []),
-  ];
-
   const handleDeleteAsset = async () => {
     if (!asset._id) return;
-
-    if (
-      !confirm(
-        "Are you sure you want to delete this asset? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      const response = await deleteAsset(asset._id);
-      if (response.success) {
-        toast.success("Asset deleted successfully");
-        queryClient.invalidateQueries({ queryKey: ["assets"] });
-        // Close the dialog by clicking outside or implement close callback
-        window.location.reload(); // Temporary solution
-      } else {
-        toast.error(response.message || "Failed to delete asset");
-      }
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast.error("An error occurred while deleting the asset");
-    } finally {
-      setIsDeleting(false);
-    }
+    await deleteAssetMutation(asset._id);
   };
 
   const nextImage = () => {
@@ -129,14 +60,14 @@ const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
 
   return (
     <div className="w-full overflow-y-auto scrollbar-hide">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column - Images and Main Info */}
-        <div className="space-y-4">
+      <div className="w-full flex flex-col md:flex-row gap-6">
+        {/* Left Column - Images */}
+        <div className="w-full">
           {/* Image Gallery */}
-          <Card className="border border-[#E4E3EC] shadow-sm overflow-hidden rounded-[16px] py-0">
+          <Card className="border border-[#E4E3EC] overflow-hidden rounded-[12px] py-0">
             <CardContent className="p-0">
               {/* Main Image Display */}
-              <div className="relative bg-gradient-to-br from-[#F8F9FF] to-[#FFF8F0] group">
+              <div className="relative group">
                 <img
                   src={images[selectedImageIndex]}
                   alt={`${asset.assetTitle} - Image ${selectedImageIndex + 1}`}
@@ -193,10 +124,13 @@ const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
               )}
             </CardContent>
           </Card>
+        </div>
 
+        {/* Right Column - Asset Details */}
+        <div className="w-full space-y-4">
           {/* Asset Info Card */}
-          <Card className="border border-[#E4E3EC] shadow-sm rounded-[16px]">
-            <CardContent className="p-6">
+          <Card className="border border-[#E4E3EC] rounded-[12px]">
+            <CardContent>
               <div className="space-y-4">
                 {/* Header with Category and Status */}
                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -205,18 +139,18 @@ const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
                   </Badge>
                   <Badge
                     className={`text-[11px] gap-1 font-medium ${
-                      asset.verified === "true"
+                      isVerified
                         ? "bg-[#D3FED3] text-green-700 hover:bg-[#D3FED3]"
                         : "bg-[#FCDB86] text-orange-700 hover:bg-[#FCDB86]"
                     }`}
                   >
-                    {asset.verified === "true" ? "✅ Verified" : "⏳ In Review"}
+                    {isVerified ? "✅ Verified" : "⏳ In Review"}
                   </Badge>
                 </div>
 
                 {/* Title */}
                 <div>
-                  <h2 className="text-[24px] font-bold text-[#1A1A21] capitalize">
+                  <h2 className="text-[20px] font-bold text-[#1A1A21] capitalize">
                     {asset.assetTitle}
                   </h2>
                 </div>
@@ -224,7 +158,7 @@ const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
                 <Separator className="bg-[#E4E3EC]" />
 
                 {/* Details Grid */}
-                <div className="grid gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Location */}
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-[#F4F3F7] rounded-lg">
@@ -249,7 +183,7 @@ const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
                       <p className="text-[12px] text-[#8C94A6] font-medium">
                         Asset Worth
                       </p>
-                      <p className="text-[24px] text-[#292D32] font-bold">
+                      <p className="text-[20px] text-[#292D32] font-bold">
                         $
                         {typeof asset.assetWorth === "number"
                           ? asset.assetWorth.toLocaleString()
@@ -312,67 +246,62 @@ const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
                 <Separator className="bg-[#E4E3EC]" />
 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button className="flex-1 cursor-pointer bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90 text-white px-6 py-3 rounded-[10px] flex items-center justify-center gap-2 font-medium">
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={() => setShowRequestLoanDialog(true)}
+                    disabled={!isVerified || hasLoanRequested}
+                    className={`w-full px-6 py-3 rounded-[10px] flex items-center justify-center gap-2 font-medium ${
+                      hasLoanRequested
+                        ? "cursor-not-allowed bg-green-50 text-green-600 border border-green-200"
+                        : isVerified
+                        ? "cursor-pointer bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90 text-white"
+                        : "cursor-not-allowed bg-gray-100 text-gray-400 border border-gray-200"
+                    }`}
+                  >
                     <DollarSign className="w-4 h-4" />
-                    Request Loan
+                    {hasLoanRequested
+                      ? "Loan Requested"
+                      : isVerified
+                      ? "Request Loan"
+                      : "Asset Not Verified"}
                   </Button>
                   <Button
-                    onClick={handleDeleteAsset}
-                    disabled={isDeleting}
-                    className="cursor-pointer bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-6 py-3 rounded-[10px] flex items-center justify-center gap-2 font-medium disabled:opacity-50"
+                    onClick={() => setShowDeleteDialog(true)}
+                    disabled={isDeleting || hasLoanRequested}
+                    className="w-full cursor-pointer bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-6 py-3 rounded-[10px] flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isDeleting ? (
-                      <>
-                        <Loader className="w-4 h-4 animate-spin" />
-                        Deleting...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="w-4 h-4" />
-                        Delete
-                      </>
-                    )}
+                    <Trash2 className="w-4 h-4" />
+                    {hasLoanRequested
+                      ? "Cannot Delete - Loan Active"
+                      : "Delete Asset"}
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Right Column - Timeline */}
-        <Card className="border border-[#E4E3EC] shadow-sm rounded-[16px] h-full">
-          <CardContent className="p-6">
-            <h3 className="text-[18px] font-semibold text-[#1A1A21] mb-6 flex items-center gap-2">
-              <div className="w-1 h-6 bg-gradient-to-b from-[#439EFF] to-[#5B1E9F] rounded-full"></div>
-              Activity Timeline
-            </h3>
-            <div className="relative">
-              <Separator
-                orientation="vertical"
-                className="bg-[#E4E3EC] absolute left-2 h-full w-[2px]"
-              />
-              {timelineData.map((entry, index) => (
-                <div key={index} className="relative mb-6 pl-8 last:mb-0">
-                  <div className="bg-gradient-to-br from-[#439EFF] to-[#5B1E9F] absolute left-0 top-0 size-5 rounded-full border-4 border-white" />
-                  <div className="flex flex-col gap-2">
-                    <h4 className="font-semibold text-[14px] text-[#1A1A21]">
-                      {entry.title}
-                    </h4>
-                    <span className="text-[12px] font-medium text-[#8C94A6] flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {entry.date}
-                    </span>
-                    <p className="text-[13px] text-[#49576D] bg-[#F8F9FF] px-3 py-2 rounded-lg">
-                      {entry.content}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleDeleteAsset}
+        title="Delete Asset"
+        description="Are you sure you want to delete this asset? This action cannot be undone and all associated data will be permanently removed."
+        itemName={asset.assetTitle}
+        isDeleting={isDeleting}
+      />
+
+      {/* Request Loan Dialog */}
+      <RequestLoanDialog
+        open={showRequestLoanDialog}
+        onOpenChange={setShowRequestLoanDialog}
+        preSelectedAssetId={asset._id}
+        onSuccess={() => {
+          setShowRequestLoanDialog(false);
+        }}
+      />
     </div>
   );
 };

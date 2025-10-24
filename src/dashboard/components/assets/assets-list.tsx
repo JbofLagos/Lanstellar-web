@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { AssetDetailsModal } from "./assets-details";
-import { DialogTitle } from "@radix-ui/react-dialog";
 import AddAssetsDialog from "./add-assets-dialog";
 import {
   Empty,
@@ -173,7 +172,7 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
   }
 
   return (
-    <div className="p-[26px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div className="p-[26px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
       {sortedAssets.map((asset) => (
         <Dialog key={asset._id}>
           <DialogTrigger asChild>
@@ -203,12 +202,16 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
                   </span>
                   <span
                     className={`text-[10px] gap-1 font-medium flex flex-row items-center justify-center text-[#1A1A21] h-[20px] px-2 rounded-[6px] ${
-                      asset.verified === "true"
+                      asset.verified === true ||
+                      String(asset.verified) === "true"
                         ? "bg-[#D3FED3] text-green-700"
                         : "bg-[#FCDB86] text-orange-700"
                     }`}
                   >
-                    {asset.verified === "true" ? "Verified ✅" : "In Review ⏳"}
+                    {asset.verified === true ||
+                    String(asset.verified) === "true"
+                      ? "Verified ✅"
+                      : "In Review ⏳"}
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">
@@ -236,8 +239,7 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
             </Card>
           </DialogTrigger>
 
-          <DialogContent className="!max-w-[90vw] w-[75vw] h-[90vh] scrollbar-hide overflow-y-auto border-[#E4E3EC]">
-            <DialogTitle className="p-0"></DialogTitle>
+          <DialogContent className="!max-w-5xl w-full p-4 scrollbar-hide border-[#E4E3EC]">
             <AssetDetailsModal asset={asset} />
           </DialogContent>
         </Dialog>

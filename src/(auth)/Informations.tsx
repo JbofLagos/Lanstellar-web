@@ -12,6 +12,7 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { useCurrentUser } from "@/hook/useCurrentUser";
 import { useUpdateProfile } from "@/hook/useUpdateProfile";
+import DocumentUpload from "@/components/DocumentUpload";
 
 interface BorrowerFormData {
   companyName: string;
@@ -30,6 +31,13 @@ interface LenderFormData {
   profilePicture?: File | null;
 }
 
+interface Document {
+  id: string;
+  name: string;
+  file: File | null;
+  required: boolean;
+}
+
 export default function Informations() {
   const { user, isLoadingUser } = useCurrentUser();
   // Don't redirect for step 1 (intermediate save), redirect for final submission
@@ -38,6 +46,28 @@ export default function Informations() {
   const [currentStep, setCurrentStep] = useState(1);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
+
+  // Define required documents for borrowers
+  const requiredDocuments: Document[] = [
+    {
+      id: "registration-cert",
+      name: "Company registration certificate",
+      file: null,
+      required: true,
+    },
+    {
+      id: "company-cac",
+      name: "Company CAC",
+      file: null,
+      required: true,
+    },
+    {
+      id: "financial-report",
+      name: "Financial report",
+      file: null,
+      required: true,
+    },
+  ];
 
   const isBorrower = user?.userType === "borrower";
 
@@ -121,22 +151,18 @@ export default function Informations() {
     }
   };
 
+  const handleStepClick = (step: number) => {
+    if (isBorrower && step === 1) {
+      setCurrentStep(1);
+    } else if (isBorrower && step === 2) {
+      setCurrentStep(2);
+    }
+  };
+
   const handleBack = () => {
     if (currentStep === 2) {
       setCurrentStep(1);
     }
-  };
-
-  const onSubmitBorrowerDocuments = async (data: BorrowerFormData) => {
-    // This is for final submission with documents - will redirect to dashboard
-    await finalUpdate.updateProfile({
-      companyName: data.companyName,
-      companyEmail: data.companyEmail,
-      companyAddress: data.companyAddress,
-      countryCode: data.countryCode,
-      contact: data.contact,
-      profilePicture: data.profilePicture || null,
-    });
   };
 
   const onSubmitLender = async (data: LenderFormData) => {
@@ -183,7 +209,7 @@ export default function Informations() {
   }
 
   return (
-    <div className=" bg-white font-inter w-full h-full justify-center relative items-center flex flex-col py-10 ">
+    <div className="bg-white font-inter w-full h-screen justify-center relative items-center flex flex-col py-10 ">
       <div className="w-full max-w-md">
         <div className="self-start ml-[20px] z-50 mt-[10px] top-0 left-0 absolute">
           <img src={"/logo3.svg"} height={48} width={174} alt="logo" />
@@ -192,7 +218,10 @@ export default function Informations() {
         {/* Progress Steps - Only show for borrowers */}
         {isBorrower && (
           <div className="flex items-center gap-2 w-10/12 mx-auto m-6">
-            <div className="flex items-center gap-2">
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => handleStepClick(1)}
+            >
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${
                   currentStep >= 1
@@ -211,7 +240,10 @@ export default function Informations() {
               </span>
             </div>
             <div className="flex-1 h-px bg-gray-200"></div>
-            <div className="flex items-center gap-2">
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => handleStepClick(2)}
+            >
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-sm ${
                   currentStep >= 2
@@ -447,88 +479,26 @@ export default function Informations() {
                 </div>
               </div>
 
-              <Button
-                type="button"
-                onClick={handleContinue}
-                disabled={loading}
-                className="w-full bg-gradient-to-br from-[#439EFF] cursor-pointer to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90 text-white disabled:opacity-50"
-              >
-                {loading ? "Saving..." : "Continue"}
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  onClick={handleContinue}
+                  disabled={loading}
+                  className="flex-1 bg-gradient-to-br from-[#439EFF] cursor-pointer to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90 text-white disabled:opacity-50"
+                >
+                  {loading ? "Saving..." : "Continue"}
+                </Button>
+              </div>
             </div>
           )}
 
           {/* BORROWER STEP 2 - Documents */}
           {isBorrower && currentStep === 2 && (
-            <form
-              onSubmit={borrowerForm.handleSubmit(onSubmitBorrowerDocuments)}
-              className="space-y-6"
-            >
-              <div>
-                <h2 className="text-[20px] font-semibold text-black mb-2">
-                  Upload required documents
-                </h2>
-                <p className="text-[13px] text-[#8C94A6]">
-                  Please all documents are scanned and clear
-                </p>
-              </div>
-
-              {/* <div className="space-y-1.5">
-                <Controller
-                  name="registrationCert"
-                  control={borrowerForm.control}
-                  render={({ field }) => (
-                <FileUploadField
-                  label="Company registration certificate"
-                      file={field.value || null}
-                      onFileChange={field.onChange}
-                    />
-                  )}
-                />
-
-                <Controller
-                  name="companyCac"
-                  control={borrowerForm.control}
-                  render={({ field }) => (
-                <FileUploadField
-                  label="Company CAC"
-                      file={field.value || null}
-                      onFileChange={field.onChange}
-                    />
-                  )}
-                />
-
-                <Controller
-                  name="financialReport"
-                  control={borrowerForm.control}
-                  render={({ field }) => (
-                <FileUploadField
-                  label="Financial report"
-                      file={field.value || null}
-                      onFileChange={field.onChange}
-                    />
-                  )}
-                />
-              </div> */}
-
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  onClick={handleBack}
-                  disabled={loading}
-                  className="w-1/3 bg-white border border-[#E4E3EC] text-[#8C94A6] hover:bg-gray-50"
-                >
-                  Back
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-2/3 bg-gradient-to-br cursor-pointer from-[#439EFF] to-[#5B1E9F] hover:from-[#439EFF]/90 hover:to-[#5B1E9F]/90 text-white disabled:opacity-50"
-                >
-                  {loading ? "Submitting..." : "Submit"}
-                </Button>
-              </div>
-            </form>
+            <DocumentUpload
+              companyName={user?.companyName || ""}
+              documents={requiredDocuments}
+              onBack={handleBack}
+            />
           )}
 
           {/* LENDER FORM */}

@@ -16,7 +16,7 @@ export interface Asset {
   assetTitle: string;
   assetCategory: string;
   assetLocation: string;
-  verified: string;
+  verified: boolean;
   assetWorth: string | number;
   docs: string;
   media: { cloudinaryUrl: string }[];
@@ -24,7 +24,8 @@ export interface Asset {
   statusColor: string;
   assetDescription?: string;
   createdAt?: string;
-  assetDocs: string[];  
+  assetDocs: string[];
+  loanStatus: boolean;
 }
 
 export interface User {
@@ -203,7 +204,7 @@ class ApiService {
   };
 
   getLoans = async () => {
-    return this.request("GET", "/loan/");
+    return this.request("GET", "/loan");
   };
 
   // Waitlist API call
@@ -217,6 +218,14 @@ class ApiService {
       showSuccessToast: true,
       showErrorToast: false,
       successMessage: "You're on the waitlist! We'll be in touch.",
+    });
+  };
+
+  // Document upload API call
+  uploadDocuments = async (formData: FormData) => {
+    return this.request("POST", "/ai/submissions", formData, {
+      showSuccessToast: true,
+      successMessage: "Documents uploaded successfully!",
     });
   };
 }
@@ -236,4 +245,5 @@ export const {
   getLoans,
   deleteLoan,
   joinWaitlist,
+  uploadDocuments,
 } = apiService;

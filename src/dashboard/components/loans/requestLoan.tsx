@@ -32,12 +32,16 @@ interface RepaymentPlan {
 
 interface RequestLoanFormProps {
   onSuccess?: () => void;
+  preSelectedAssetId?: string;
 }
 
-const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
+const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
+  onSuccess,
+  preSelectedAssetId,
+}) => {
   const [plan, setPlan] = useState<string>("one");
   const [purpose, setPurpose] = useState<string>("");
-  const [assetId, setAssetId] = useState<string>("");
+  const [assetId, setAssetId] = useState<string>(preSelectedAssetId || "");
   const [amount, setAmount] = useState<string>("");
   const [duration, setDuration] = useState<string>("");
   const [borrower, setBorrower] = useState<string>("");
@@ -66,6 +70,13 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
     }
   }, [userData?._id]);
 
+  // Update assetId when preSelectedAssetId changes
+  useEffect(() => {
+    if (preSelectedAssetId) {
+      setAssetId(preSelectedAssetId);
+    }
+  }, [preSelectedAssetId]);
+
   // Log any errors from the assets hook
   useEffect(() => {
     if (assetsError) {
@@ -93,7 +104,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
     const selectedAsset = assets.find((asset) => asset._id === assetId);
     if (!selectedAsset) return 0;
     const worth = Number(selectedAsset.assetWorth);
-    return worth > 0 ? Math.floor(worth * 0.3) : 0;
+    return worth > 0 ? Math.floor(worth * 0.6) : 0;
   };
 
   const validateLoanAmount = (value: string): boolean => {
@@ -239,7 +250,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({ onSuccess }) => {
           />
           <div className="flex flex-col gap-1">
             <span className="text-[#A19821] font-medium text-[12px]">
-              *Maximum of 30% of asset value
+              *Maximum of 60% of asset value
             </span>
             {assetId && getMaxLoanAmount() > 0 && (
               <span className="text-[#10b981] font-medium text-[11px]">

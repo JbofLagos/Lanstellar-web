@@ -9,15 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  CircleMinus,
-  Clock,
-  Loader,
-  Trash2,
-} from "lucide-react";
+import { CheckCircle, CircleMinus, Clock, Loader, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -79,10 +71,13 @@ interface Loan {
     assetCategory: string;
     assetLocation: string;
     assetWorth: string;
-    verified: string;
     docs: string[];
+    loanStatus: boolean;
+    verified: boolean;
   };
   amount: number;
+  loanStatus: boolean;
+  verified: boolean;
   duration: string;
   status: string;
   createdAt: string;
@@ -162,32 +157,10 @@ const LoanOverview = () => {
 
   return (
     <div>
-      <Card className="border-none shadow-none rounded-none pt-2">
-        <CardHeader className="flex flex-row justify-between text-[15.5px] px-0 text-black font-semibold">
-          <span> Loan Overview Section</span>
-          <div className="flex flex-row items-center gap-2">
-            <div className="border-r border-r[#E4E3EC] pr-4">
-              <img
-                src="/icons/export.svg"
-                width={24}
-                height={24}
-                alt="export"
-                className="cursor-pointer h-[41.34px] w-[41.34px] "
-              />
-            </div>
-
-            <div className="w-[183.25px] h-[41.34px] bg-white flex flex-row justify-between items-center gap-2">
-              <div className="bg-[#F4F3F7] h-[41.34px] w-[41.34px] rounded-full flex justify-center items-center cursor-pointer">
-                <ChevronLeft color="#8C94A6" size={16} />
-              </div>
-              <div className="whitespace-nowrap text-[#49576D] text-[12.06px] ">
-                1-50 of 234
-              </div>
-              <div className="bg-[#F4F3F7] h-[41.34px] w-[41.34px] rounded-full flex justify-center items-center cursor-pointer">
-                <ChevronRight color="#8C94A6" size={16} />
-              </div>
-            </div>
-          </div>
+      <Card className="border-none shadow-none rounded-none">
+        <CardHeader className="flex flex-row justify-between items-center text-[16px] px-0 text-black font-semibold">
+          <span>Loan Overview</span>
+          <RequestLoanDialog />
         </CardHeader>
 
         <CardContent className="text-[13.78px] flex flex-col font-medium w-full justify-center items-center text-[#8C94A6] px-0">
@@ -267,12 +240,14 @@ const LoanOverview = () => {
                 </span>
                 <span
                   className={`text-[10.34px] gap-1 font-medium flex flex-row items-center justify-center text-[#1A1A21] h-[20px] w-[76px] rounded-[4px] ${
-                    selectedLoan.assetId.verified === "true"
+                    selectedLoan.assetId.verified === true ||
+                    String(selectedLoan.assetId.verified) === "true"
                       ? "bg-[#D3FED3]"
                       : "bg-[#FCDB86]"
                   } bg-opacity-10`}
                 >
-                  {selectedLoan.assetId.verified === "true"
+                  {selectedLoan.assetId.verified === true ||
+                  String(selectedLoan.assetId.verified) === "true"
                     ? "Verified ✅"
                     : "In Review ⏳"}
                 </span>
