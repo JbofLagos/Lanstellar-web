@@ -166,7 +166,7 @@ export default function Informations() {
   };
 
   const onSubmitLender = async (data: LenderFormData) => {
-    // Lender submission - will redirect to dashboard
+    // Lender submission - will redirect to dashboard via useUpdateProfile hook
     await finalUpdate.updateProfile({
       username: data.username,
       email: data.email,

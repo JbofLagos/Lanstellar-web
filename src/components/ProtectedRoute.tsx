@@ -1,14 +1,34 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hook/useAuth";
+import { type User } from "@/lib/api-service";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedUserTypes?: string[];
+  skipProfileCheck?: boolean;
 }
+
+// Helper function to check if user profile is complete
+const isProfileComplete = (user: User | null | undefined): boolean => {
+  if (!user) return false;
+
+  // For borrowers, check if they have companyName
+  if (user.userType === "borrower") {
+    return !!user.companyName;
+  }
+
+  // For lenders, check if they have username
+  if (user.userType === "lender") {
+    return !!user.username;
+  }
+
+  return false;
+};
 
 export const ProtectedRoute = ({
   children,
   allowedUserTypes,
+  skipProfileCheck = false,
 }: ProtectedRouteProps) => {
   const { isAuthenticated, user, isLoadingUser } = useAuth();
   const location = useLocation();
@@ -28,6 +48,11 @@ export const ProtectedRoute = ({
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Check if profile is complete (unless skipProfileCheck is true)
+  if (!skipProfileCheck && !isProfileComplete(user)) {
+    return <Navigate to="/setup-profile" replace />;
   }
 
   // Check if user type is allowed (if specified)

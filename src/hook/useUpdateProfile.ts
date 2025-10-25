@@ -52,12 +52,15 @@ export const useUpdateProfile = (redirectOnSuccess = true) => {
       toast.success(data.message || "Profile updated successfully!");
 
       if (data.success && data.data) {
-        // Update the user in cache
+        // Update the user in cache - keep the full response structure
         queryClient.setQueryData(["user"], data);
 
         // Only navigate if redirectOnSuccess is true
         if (redirectOnSuccess) {
-          navigate("/dashboard");
+          // Redirect based on user type
+          const redirectPath =
+            data.data.userType === "lender" ? "/lpdashboard" : "/dashboard";
+          navigate(redirectPath);
         }
       }
     },

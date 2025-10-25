@@ -24,7 +24,8 @@ export const useSignup = () => {
       if (data.success && data.data) {
         const { token, user } = data.data;
         localStorage.setItem("token", token);
-        queryClient.setQueryData(["user"], user);
+        // Store the user in the same format as the API response
+        queryClient.setQueryData(["user"], { success: true, data: user });
         toast.success(data.message || "Account created successfully!");
         navigate("/setup-profile");
       }

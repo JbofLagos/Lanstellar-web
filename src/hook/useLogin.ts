@@ -21,8 +21,12 @@ export const useLogin = () => {
       if (data.success && data.data) {
         const { token, user } = data.data;
         localStorage.setItem("token", token);
-        queryClient.setQueryData(["user"], user);
-        navigate("/dashboard");
+        // Store the user in the same format as the API response
+        queryClient.setQueryData(["user"], { success: true, data: user });
+        // Let GuestRoute/ProtectedRoute handle navigation based on profile completion
+        const redirectPath =
+          user.userType === "lender" ? "/lpdashboard" : "/dashboard";
+        navigate(redirectPath);
       }
     },
     onError(error) {

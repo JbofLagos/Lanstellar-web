@@ -67,7 +67,7 @@ const App = () => {
       <Route
         path="/setup-profile"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute skipProfileCheck={true}>
             <Informations />
           </ProtectedRoute>
         }

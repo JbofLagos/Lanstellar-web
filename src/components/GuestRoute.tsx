@@ -1,9 +1,27 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hook/useAuth";
+import { type User } from "@/lib/api-service";
 
 interface GuestRouteProps {
   children: React.ReactNode;
 }
+
+// Helper function to check if user profile is complete
+const isProfileComplete = (user: User | null | undefined): boolean => {
+  if (!user) return false;
+
+  // For borrowers, check if they have companyName
+  if (user.userType === "borrower") {
+    return !!user.companyName;
+  }
+
+  // For lenders, check if they have username
+  if (user.userType === "lender") {
+    return !!user.username;
+  }
+
+  return false;
+};
 
 export const GuestRoute = ({ children }: GuestRouteProps) => {
   const { isAuthenticated, user, isLoadingUser } = useAuth();
@@ -20,14 +38,19 @@ export const GuestRoute = ({ children }: GuestRouteProps) => {
     );
   }
 
-  // If user is authenticated, redirect to appropriate dashboard
+  // If user is authenticated, redirect based on profile completion
   if (isAuthenticated) {
-    // Redirect based on user type
-    const redirectPath = user?.userType === "lender" ? "/lpdashboard" : "/dashboard";
+    // Check if profile is complete
+    if (!isProfileComplete(user)) {
+      return <Navigate to="/setup-profile" replace />;
+    }
+
+    // Redirect to appropriate dashboard based on user type
+    const redirectPath =
+      user?.userType === "lender" ? "/lpdashboard" : "/dashboard";
     return <Navigate to={redirectPath} replace />;
   }
 
   // User is not authenticated, show the auth page (login/signup)
   return <>{children}</>;
 };
-
