@@ -176,7 +176,7 @@ const LoanOverview = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loans.map((loan) => (
+              {loans.map((loan: Loan) => (
                 <TableRow
                   key={loan._id}
                   className="hover:bg-[#F8F8FB] transition-colors cursor-pointer"

@@ -11,6 +11,19 @@ export interface ApiResponse<T = any> {
   assets?: Asset[];
 }
 
+export interface Loan {
+  _id: string;
+  loanPurpose: string;
+  borrower: string;
+  assetId: string;
+  amount: number;
+  duration: number;
+  paymentPlan: number;
+  interestRate: number;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 export interface Asset {
   _id: string;
   assetTitle: string;
@@ -204,6 +217,10 @@ class ApiService {
   };
 
   getLoans = async () => {
+    return this.request("GET", "/loan/user");
+  };
+  
+  getAllLoans = async () => {
     return this.request("GET", "/loan");
   };
 
@@ -235,6 +252,7 @@ export const {
   getAssets,
   createAsset,
   getAssetById,
+  getAllLoans,
   updateAsset,
   deleteAsset,
   getCurrentUser,

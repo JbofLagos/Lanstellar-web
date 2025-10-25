@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
-import { getLoans } from "@/lib/api-service";
+import { getLoans, getAllLoans } from "@/lib/api-service";
 
 export interface Loan {
   _id: string;
@@ -25,7 +26,6 @@ export function useLoans() {
     queryKey: ["loans"],
     queryFn: async () => {
       const response = await getLoans();
-      console.log(response);
       return response;
     },
     retry: 2,
@@ -34,10 +34,33 @@ export function useLoans() {
 
   return {
     isLoadingLoans,
-    loans: (data?.data as Loan[]) || [],
+    loans: (data?.data as any)?.loans || [],
     error,
     refetch,
   };
 }
 
-// Request Loan
+// Get all loans
+export function useGetAllLoans() {
+  const {
+    isPending: isLoadingAllLoans,
+    data,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["allLoans"],
+    queryFn: async () => {
+      const response = await getAllLoans();
+      return response;
+    },
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  return {
+    isLoadingAllLoans,
+    allLoans: (data?.data as any)?.loans || [],
+    error,
+    refetch,
+  };
+}
