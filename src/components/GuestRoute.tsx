@@ -24,10 +24,11 @@ const isProfileComplete = (user: User | null | undefined): boolean => {
 };
 
 export const GuestRoute = ({ children }: GuestRouteProps) => {
-  const { isAuthenticated, user, isLoadingUser } = useAuth();
+  const { isAuthenticated, user, isLoadingUser, token } = useAuth();
 
-  // Show loading state while checking authentication
-  if (isLoadingUser) {
+  // Only show loading state if there's a token and we're actually fetching user data
+  // If there's no token, we can immediately show the login page
+  if (token && isLoadingUser) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
