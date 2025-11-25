@@ -10,12 +10,6 @@ const Sidebar = () => {
 
   const menuItems = [
     { id: "", label: "Dashboard", icon: "/icons/dashboard.svg" },
-    { id: "loans", label: "Loans", icon: "/icons/wallet-minus.svg" },
-    {
-      id: "expected",
-      label: "Expected ROI",
-      icon: "/percentage-square.svg",
-    },
     { id: "settings", label: "Settings", icon: "/icons/setting.svg" },
   ];
 
