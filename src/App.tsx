@@ -20,6 +20,8 @@ import UserTypePage from "./(auth)/UserSelection";
 import Informations from "./(auth)/Informations";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { GuestRoute } from "./components/GuestRoute";
+import AdminLayout from "./admin/layout";
+import AdminPage from "./admin/page";
 
 const HomePage = () => {
   return (
@@ -62,7 +64,14 @@ const App = () => {
           </GuestRoute>
         }
       />
-
+      <Route
+        path="/admin"
+        element={
+          <AdminLayout>
+            <AdminPage />
+          </AdminLayout>
+        }
+      />
       {/* Protected Routes - Requires Authentication */}
       <Route
         path="/setup-profile"
@@ -126,6 +135,7 @@ const App = () => {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/lpdashboard/expected"
         element={
