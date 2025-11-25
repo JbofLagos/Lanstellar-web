@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TrendingUp, DollarSign } from "lucide-react";
 import Chart from "react-apexcharts";
 import "apexcharts/dist/apexcharts.css";
 
@@ -215,13 +216,16 @@ const Analytics = () => {
       <Card className="border-[0.86px] border-[#E4E3EC] rounded-[5.17px] shadow-none">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[12.06px] font-medium text-[#8C94A6]">
-                Expected ROI
-              </span>
-              <span className="text-[25px] font-semibold text-[#1A1A21]">
-                {analyticsData.expectedROI}
-              </span>
+            <div className="flex items-center gap-3">
+              <TrendingUp className="w-[20.67px] h-[20.67px] text-[#504CF6]" />
+              <div className="flex flex-col">
+                <span className="text-[12.06px] font-medium text-[#8C94A6]">
+                  Expected ROI
+                </span>
+                <span className="text-[25px] font-semibold text-[#1A1A21]">
+                  {analyticsData.expectedROI}
+                </span>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -236,13 +240,16 @@ const Analytics = () => {
       <Card className="border-[0.86px] border-[#E4E3EC] rounded-[5.17px] shadow-none">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[12.06px] font-medium text-[#8C94A6]">
-                Liquidity Provided
-              </span>
-              <span className="text-[25px] font-semibold text-[#1A1A21]">
-                {analyticsData.liquidityProvided}
-              </span>
+            <div className="flex items-center gap-3">
+              <DollarSign className="w-[20.67px] h-[20.67px] text-[#1F90FF]" />
+              <div className="flex flex-col">
+                <span className="text-[12.06px] font-medium text-[#8C94A6]">
+                  Liquidity Provided
+                </span>
+                <span className="text-[25px] font-semibold text-[#1A1A21]">
+                  {analyticsData.liquidityProvided}
+                </span>
+              </div>
             </div>
           </div>
         </CardHeader>

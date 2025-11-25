@@ -23,7 +23,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`bg-white font- border-r font-inter border-[#E4E3EC] text-[#49576D h-full transition-all duration-300 ease-in-out flex flex-col  ${
+      className={`bg-white font- border-r font-inter border-[#E4E3EC] text-[#49576D] h-screen transition-all duration-300 ease-in-out flex flex-col sticky top-0 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >

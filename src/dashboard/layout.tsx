@@ -9,7 +9,7 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen flex bg-white font-inter ">
-      <aside className="flex-shrink-0">
+      <aside className="flex-shrink-0 sticky top-0 h-screen">
         <Sidebar />
       </aside>
 
