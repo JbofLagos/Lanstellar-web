@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { login, type ApiResponse, type User } from "@/lib/api-service";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { saveToken } from "@/lib/auth";
 
 interface LoginData {
   email: string;
@@ -20,7 +21,7 @@ export const useLogin = () => {
       toast.success(data.message || "Login successful!");
       if (data.success && data.data) {
         const { token, user } = data.data;
-        localStorage.setItem("token", token);
+        saveToken(token); // Saves to both localStorage and cookies
         // Store the user in the same format as the API response
         queryClient.setQueryData(["user"], { success: true, data: user });
         // Let GuestRoute/ProtectedRoute handle navigation based on profile completion

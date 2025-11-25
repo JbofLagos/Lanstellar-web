@@ -1,16 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { clearToken } from "@/lib/auth";
 
 export const useLogout = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const logout = () => {
-    // Clear localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
+    // Clear token from both localStorage and cookies
+    clearToken();
+    
     // Clear React Query cache
     queryClient.clear();
 

@@ -1,7 +1,8 @@
 import { useCurrentUser } from "./useCurrentUser";
+import { getToken } from "@/lib/auth";
 
 export const useAuth = () => {
-  const token = localStorage.getItem("token");
+  const token = getToken(); // Checks both localStorage and cookies
   const { user, isLoadingUser } = useCurrentUser();
 
   const isAuthenticated = !!token;

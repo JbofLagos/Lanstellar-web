@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { register, type ApiResponse, type User } from "@/lib/api-service";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { saveToken } from "@/lib/auth";
 
 interface SignupData {
   email: string;
@@ -23,7 +24,7 @@ export const useSignup = () => {
 
       if (data.success && data.data) {
         const { token, user } = data.data;
-        localStorage.setItem("token", token);
+        saveToken(token); // Saves to both localStorage and cookies
         // Store the user in the same format as the API response
         queryClient.setQueryData(["user"], { success: true, data: user });
         toast.success(data.message || "Account created successfully!");
