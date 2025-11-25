@@ -9,16 +9,16 @@ interface DashboardLayoutProps {
 const LpDashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen flex bg-white font-inter ">
-      <aside className="flex-shrink-0 sticky top-0 h-screen">
+      <aside className="flex-shrink-0 sticky top-0 h-screen z-20">
         <Sidebar />
       </aside>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="flex-shrink-0">
+      <div className="flex-1 flex flex-col">
+        <header className="flex-shrink-0 sticky top-0 z-10">
           <Navbar />
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-white ">
+        <main className="flex-1 overflow-y-auto bg-white">
           <div className=" mx-auto">{children}</div>
         </main>
       </div>

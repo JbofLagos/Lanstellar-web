@@ -26,7 +26,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className="p-5 border-b border-b-[#E5E5E5] px-10 font-fredoka flex items-center justify-between">
+    <div className="p-5 border-b border-b-[#E5E5E5] px-10 font-fredoka flex items-center justify-between bg-white sticky top-0 z-10">
       <div>
         <h2 className="text-[24px] text-[#49576D]">
           Welcome{" "}
