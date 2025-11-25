@@ -1,5 +1,4 @@
-import AssetsChart from "./components/assets-chart";
-import AssetsTransaction from "./components/assets-transaction";
+import Analytics from "./components/analytics";
 
 const LpDashboardPage = () => {
   return (
@@ -16,14 +15,9 @@ const LpDashboardPage = () => {
         <span className="font-semibold text-[15.5px]">$0.0</span>
       </div>
 
-      {/* Chart */}
+      {/* Analytics */}
       <div>
-        <AssetsChart />
-      </div>
-
-      {/* Transactions */}
-      <div>
-        <AssetsTransaction />
+        <Analytics />
       </div>
     </div>
   );
