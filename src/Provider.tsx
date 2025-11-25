@@ -1,26 +1,38 @@
+import type React from "react";
 import { createAppKit } from "@reown/appkit/react";
 
 import { WagmiProvider } from "wagmi";
-import { arbitrum, mainnet } from "@reown/appkit/networks";
+import { arbitrum, base, baseSepolia, mainnet } from "@reown/appkit/networks";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 
 // 0. Setup queryClient
 const queryClient = new QueryClient();
 
+type AppKitNetwork =
+  | typeof baseSepolia
+  | typeof base
+  | typeof mainnet
+  | typeof arbitrum;
+
 // 1. Get projectId from https://dashboard.reown.com
 const projectId = import.meta.env.VITE_REOWN_PROJECT_ID;
 
 // 2. Create a metadata object - optional
 const metadata = {
-  name: "AppKit",
-  description: "AppKit Example",
-  url: "https://example.com", // origin must match your domain & subdomain
-  icons: ["https://avatars.githubusercontent.com/u/179229932"],
+  name: "Lanstellar",
+  description: "Lanstellar",
+  url: "https://lanstellar.com", // origin must match your domain & subdomain
+  icons: ["/logo.svg"],
 };
 
 // 3. Set the networks
-const networks = [mainnet, arbitrum];
+const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
+  base,
+  baseSepolia,
+  mainnet,
+  arbitrum,
+];
 
 // 4. Create Wagmi Adapter
 const wagmiAdapter = new WagmiAdapter({
@@ -41,8 +53,9 @@ createAppKit({
 });
 
 export function AppKitProvider({ children }: { children: React.ReactNode }) {
+  const config = wagmiAdapter.wagmiConfig;
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+    <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   );
