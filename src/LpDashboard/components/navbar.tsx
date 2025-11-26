@@ -10,10 +10,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCurrentUser } from "@/hook/useCurrentUser";
 import { useLogout } from "@/hook/useLogout";
+import { useAppKitAccount } from "@reown/appkit/react";
 
 const Navbar = () => {
   const { user } = useCurrentUser();
   const { logout } = useLogout();
+  const { isConnected, address } = useAppKitAccount();
 
   const handleConnectWallet = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,10 +73,13 @@ const Navbar = () => {
             {/* User Info Section */}
             <div className="px-3 py-2 mb-2">
               <p className="text-sm font-medium text-[#1A1A21]">
-                {user?.fullName || "Guest"}
+                {user?.fullName ||
+                  user?.companyName ||
+                  user?.username ||
+                  "Guest"}
               </p>
               <p className="text-xs text-[#8C94A6] truncate">
-                {user?.companyEmail || user?.email || ""}
+                {user?.companyEmail || user?.email || user?.username || ""}
               </p>
             </div>
 
@@ -108,7 +113,7 @@ const Navbar = () => {
               </Link>
             </DropdownMenuItem>
 
-            {!user?.walletAddress && (
+            {isConnected ? (
               <DropdownMenuItem
                 onClick={handleConnectWallet}
                 className="flex w-full items-center px-3 py-2 text-[14px] text-[#49576D] rounded-md hover:bg-[#F4F3F7] cursor-pointer transition-colors"
@@ -126,9 +131,11 @@ const Navbar = () => {
                     d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                   />
                 </svg>
-                Connect Wallet
+                {(address as string)?.slice(0, 6) +
+                  "..." +
+                  (address as string)?.slice(-4)}
               </DropdownMenuItem>
-            )}
+            ) : null}
 
             <DropdownMenuSeparator className="bg-[#E4E3EC]" />
 

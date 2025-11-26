@@ -31,7 +31,7 @@ const Navbar = () => {
         <h2 className="text-[24px] text-[#49576D]">
           Welcome{" "}
           <span className="text-black">
-            {user?.fullName || user?.companyName || "Guest"} 👋,
+            {user?.fullName || user?.companyName || user?.username || "Guest"} 👋,
           </span>
         </h2>
       </div>
@@ -54,7 +54,7 @@ const Navbar = () => {
                   {user?.fullName || user?.companyName || user?.username || "Guest"}
                 </p>
                 <p className="text-xs text-[#8C94A6] truncate">
-                  {user?.companyEmail || user?.email || ""}
+                  {user?.companyEmail || user?.email || user?.username || ""}
                 </p>
               </div>
             </div>
