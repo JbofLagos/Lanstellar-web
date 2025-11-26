@@ -1,5 +1,6 @@
 import Sidebar from "./components/sidebar";
 import Navbar from "./components/navbar";
+import ConnectWalletButton from "@/components/ConnectWalletButton";
 import type { ReactNode } from "react";
 
 interface DashboardLayoutProps {
@@ -20,6 +21,7 @@ const LpDashboardLayout = ({ children }: DashboardLayoutProps) => {
 
         <main className="flex-1 overflow-y-auto bg-white">
           <div className=" mx-auto">{children}</div>
+        <ConnectWalletButton />
         </main>
       </div>
     </div>
