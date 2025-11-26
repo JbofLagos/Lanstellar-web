@@ -25,7 +25,7 @@ const LpDashboardPage = () => {
           {!isConnected ? (
             <Button
               onClick={() => open()}
-              className="bg-[#504CF6] hover:bg-[#504CF6]/90 cursor-pointer text-white px-5 py-2 rounded-lg font-medium text-[16px]"
+              className="bg-gradient-to-br from-[#439EFF] to-[#5B1E9F] hover:bg-[#439EFF]/90 cursor-pointer text-white px-5 py-2 rounded-lg font-medium text-[16px]"
             >
               Connect Wallet
             </Button>
@@ -33,7 +33,7 @@ const LpDashboardPage = () => {
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-[#504CF6] hover:bg-[#504CF6]/90 cursor-pointer text-white px-5 py-2 rounded-lg font-medium text-[16px]"
+                className="bg-gradient-to-br from-[#439EFF] to-[#5B1E9F] hover:bg-[#439EFF]/90 cursor-pointer text-white px-5 py-2 rounded-lg font-medium text-[16px]"
               >
                 Add Liquidity
               </Button>
