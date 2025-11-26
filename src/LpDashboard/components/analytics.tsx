@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Select,
@@ -13,13 +13,71 @@ import "apexcharts/dist/apexcharts.css";
 
 const Analytics = () => {
   const [selectedDuration, setSelectedDuration] = useState("1");
+  const [currentROIAmount, setCurrentROIAmount] = useState(0);
+  const startTimeRef = useRef<Date>(new Date());
 
   // Mock data - replace with actual data from API
   const analyticsData = {
-    expectedROI: "12.5%",
+    expectedROI: "12%",
     liquidityProvided: "$125,000",
     duration: selectedDuration,
   };
+
+  // Base ROI: 12% per 12 months = 1% per month
+  const BASE_ROI_PER_MONTH = 12 / 12; // 1% per month
+  const BASE_ROI_PER_YEAR = 12; // 12% per year
+
+  // Parse liquidity amount (remove $ and commas)
+  const liquidityAmount = parseFloat(
+    analyticsData.liquidityProvided.replace(/[$,]/g, "")
+  );
+
+  // Calculate ROI percentage for selected duration
+  const selectedMonths = parseInt(selectedDuration);
+  const roiPercentage = BASE_ROI_PER_MONTH * selectedMonths;
+  const totalROIAmount = (liquidityAmount * roiPercentage) / 100;
+
+  // Calculate total days in selected duration
+  const totalDays = selectedMonths * 30; // Approximate 30 days per month
+  const totalMinutes = totalDays * 24 * 60; // Total minutes in duration
+  const roiPerMinute = totalROIAmount / totalMinutes;
+
+  // Update ROI amount - increments every minute, but checks every second for smooth UI
+  useEffect(() => {
+    // Reset start time when duration changes
+    startTimeRef.current = new Date();
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const elapsedMilliseconds = now.getTime() - startTimeRef.current.getTime();
+      // Calculate elapsed minutes (ROI increments every full minute)
+      const elapsedMinutes = Math.floor(elapsedMilliseconds / (1000 * 60));
+
+      // Calculate current ROI based on elapsed minutes
+      // ROI accumulates every minute until reaching total ROI amount
+      const elapsedROI = Math.min(
+        roiPerMinute * elapsedMinutes,
+        totalROIAmount
+      );
+      setCurrentROIAmount(elapsedROI);
+    }, 1000); // Check every second for smooth display, but value increments every minute
+
+    // Initial calculation on mount and when duration changes
+    const calculateInitialROI = () => {
+      const now = new Date();
+      const elapsedMilliseconds = now.getTime() - startTimeRef.current.getTime();
+      const elapsedMinutes = Math.floor(elapsedMilliseconds / (1000 * 60));
+      const initialROI = Math.min(
+        roiPerMinute * elapsedMinutes,
+        totalROIAmount
+      );
+      setCurrentROIAmount(initialROI);
+    };
+
+    calculateInitialROI();
+
+    return () => clearInterval(interval);
+  }, [selectedDuration, roiPerMinute, totalROIAmount]);
 
   const durationOptions = [
     { value: "1", label: "1 Month" },
@@ -260,37 +318,31 @@ const Analytics = () => {
         </CardContent>
       </Card>
 
-      {/* Duration Card */}
+      {/* ROI Card */}
       <Card className="border-[0.86px] border-[#E4E3EC] rounded-[5.17px] shadow-none">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-col w-full">
-              <span className="text-[12.06px] font-medium text-[#8C94A6] mb-1">
-                Duration
+              <span className="text-[12.06px] font-medium text-[#8C94A6] mb-2">
+                ROI
               </span>
-              <Select
-                value={selectedDuration}
-                onValueChange={setSelectedDuration}
-              >
-                <SelectTrigger className="w-full h-[32px] border-[#E4E3EC] text-[14px] font-semibold text-[#1A1A21] bg-white">
-                  <SelectValue>
-                    {durationOptions.find((opt) => opt.value === selectedDuration)?.label}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {durationOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <span className="text-[25px] font-semibold text-[#1A1A21]">
+                  ${currentROIAmount.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </span>
+                <span className="text-[14px] font-medium text-[#8C94A6]">
+                  ({roiPercentage.toFixed(1)}%)
+                </span>
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="text-[11px] text-[#8C94A6]">
-            Select liquidity duration period
+            Based on {BASE_ROI_PER_YEAR}% annual ROI for {durationOptions.find((opt) => opt.value === selectedDuration)?.label.toLowerCase()}
           </div>
         </CardContent>
       </Card>
