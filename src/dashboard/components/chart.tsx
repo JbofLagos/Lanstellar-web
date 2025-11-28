@@ -62,7 +62,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
             padding: "10px",
           }}
         >
-          Asset value: ${payload[0].value.toLocaleString()}
+          Asset value: ${payload[0].value?.toLocaleString()}
         </p>
       </div>
     );

@@ -231,7 +231,7 @@ const AssetsList = ({ sortBy }: AssetsListProps) => {
                         typeof asset.assetWorth === "number"
                           ? asset.assetWorth
                           : parseFloat(String(asset.assetWorth)) || 0;
-                      return worth.toLocaleString();
+                      return worth?.toLocaleString();
                     })()}
                   </p>
                 </div>

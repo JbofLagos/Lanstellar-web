@@ -259,7 +259,7 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
                       {currentAmount > 0 && (
                         <span className="text-[#504CF6] text-[12px]">
                           +{option.roiPercentage.toFixed(2)}% ($
-                          {option.roiAmount.toLocaleString(undefined, {
+                          {option.roiAmount?.toLocaleString(undefined, {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -294,7 +294,7 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
                   $
                   {durationOptions
                     .find((d) => d.value === duration)
-                    ?.roiAmount.toLocaleString(undefined, {
+                    ?.roiAmount?.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}

@@ -164,7 +164,7 @@ const LoanPosition = () => {
                       </p>
                     </div>
                     <p className="text-[15px] text-[#1A1A21] font-bold">
-                      ${loan.amount.toLocaleString()}
+                      ${loan.amount?.toLocaleString()}
                     </p>
                   </div>
                   <div>

@@ -186,10 +186,10 @@ const AssetDetailsModal = ({ asset }: AssetDetailsModalProps) => {
                       <p className="text-[20px] text-[#292D32] font-bold">
                         $
                         {typeof asset.assetWorth === "number"
-                          ? asset.assetWorth.toLocaleString()
+                          ? asset.assetWorth?.toLocaleString()
                           : parseFloat(
                               String(asset.assetWorth) || "0"
-                            ).toLocaleString()}
+                            )?.toLocaleString()}
                       </p>
                     </div>
                   </div>

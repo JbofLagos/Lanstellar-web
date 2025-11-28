@@ -408,7 +408,7 @@ const Analytics = () => {
                 ) : (
                   <span className="text-[25px] font-semibold text-white">
                     $
-                    {currentROIAmount.toLocaleString(undefined, {
+                    {currentROIAmount?.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
@@ -420,7 +420,7 @@ const Analytics = () => {
           <CardContent className="pt-0 space-y-2">
             <div className="text-[11px] text-white/80">
               {totalLiquidity > 0
-                ? `Expected: $${totalExpectedROI.toLocaleString(undefined, {
+                ? `Expected: $${totalExpectedROI?.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })} (${
@@ -454,7 +454,7 @@ const Analytics = () => {
                   <Loader2 className="w-6 h-6 animate-spin text-[#8C94A6]" />
                 ) : (
                   <span className="text-[25px] font-semibold text-[#1A1A21]">
-                    ${totalLiquidity.toLocaleString()}
+                    ${totalLiquidity?.toLocaleString()}
                   </span>
                 )}
               </div>
@@ -487,7 +487,7 @@ const Analytics = () => {
                 ) : (
                   <span className="text-[25px] font-semibold text-[#1A1A21]">
                     $
-                    {totalExpectedROI.toLocaleString(undefined, {
+                    {totalExpectedROI?.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
