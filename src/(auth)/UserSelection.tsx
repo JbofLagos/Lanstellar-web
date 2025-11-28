@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const UserTypePage = () => {
   const [selected, setSelected] = useState<"borrower" | "lender" | null>(null);
@@ -97,7 +97,7 @@ const UserTypePage = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
             <p className="text-[#8C94A6] text-sm sm:text-[13px] leading-relaxed">
               By continuing, you agree to our{" "}
               <a href="/terms" className="text-[#5B1E9F]">
@@ -111,28 +111,14 @@ const UserTypePage = () => {
             </p>
             <p className="text-[#8C94A6] text-sm sm:text-[13px] leading-relaxed">
               Already have an account?{" "}
-              <a href="/login" className="text-[#5B1E9F] cursor-pointer">
+              <Link to="/login" className="text-[#5B1E9F] cursor-pointer">
                 Login
-              </a>
+              </Link>
             </p>
           </div>
 
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-6 mt-8">
-            <a href={"/login"} className="w-full sm:w-auto">
-              <Button
-                variant={"outline"}
-                className="w-full sm:w-auto py-2 shadow-none text-sm rounded-md font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-              >
-                <img
-                  src="/icons/arrow-left.svg"
-                  alt=""
-                  className="h-[20px] w-[20px]"
-                />
-                Go Back
-              </Button>
-            </a>
-
+          <div className="flex flex-col sm:flex-row justify-end gap-4 sm:gap-6 mt-4">
             <Button
               onClick={handleContinue}
               disabled={!selected}
