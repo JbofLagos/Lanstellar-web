@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useAppKitAccount } from "@reown/appkit/react";
+import { truncateAddress } from "@/lib/utils";
 
 interface AddLiquidityModalProps {
   open: boolean;
@@ -25,10 +27,11 @@ interface AddLiquidityModalProps {
 }
 
 const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
-  const [address, setAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [duration, setDuration] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { address } = useAppKitAccount();
 
   const durationOptions = [
     { value: "1", label: "1 Month" },
@@ -37,24 +40,8 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
     { value: "6", label: "6 Months" },
   ];
 
-  const validateAddress = (addr: string): boolean => {
-    // Basic Ethereum address validation (0x followed by 40 hex characters)
-    return /^0x[a-fA-F0-9]{40}$/.test(addr);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validation
-    if (!address.trim()) {
-      toast.error("Please enter a wallet address");
-      return;
-    }
-
-    if (!validateAddress(address)) {
-      toast.error("Please enter a valid Ethereum address");
-      return;
-    }
 
     if (!amount || parseFloat(amount) <= 0) {
       toast.error("Please enter a valid amount");
@@ -71,14 +58,13 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
     try {
       // TODO: Replace with actual API call
       // await addLiquidity({ address, amount: parseFloat(amount), duration });
-      
+
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       toast.success("Liquidity added successfully!");
-      
+
       // Reset form
-      setAddress("");
       setAmount("");
       setDuration("");
       onOpenChange(false);
@@ -92,7 +78,6 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setAddress("");
       setAmount("");
       setDuration("");
       onOpenChange(false);
@@ -107,30 +92,25 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
             Add Liquidity
           </DialogTitle>
           <DialogDescription className="text-[14px] text-[#8C94A6]">
-            Provide liquidity to the pool by entering your wallet address, amount, and duration.
+            Provide liquidity to the pool by entering your wallet address,
+            amount, and duration.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Wallet Address */}
-          <div className="space-y-2">
-            <Label htmlFor="address" className="text-[13.78px] font-medium text-[#1A1A21]">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[13.78px] font-medium text-[#1A1A21]">
               Wallet Address
-            </Label>
-            <Input
-              id="address"
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="0x..."
-              className="w-full h-[42px] rounded-[10px] border border-[#E4E3EC] bg-white text-[14px]"
-              disabled={isSubmitting}
-            />
+            </p>
+            <p className="text-[13.78px] font-medium text-[#8C94A6]">
+              {truncateAddress(address || "")}
+            </p>
           </div>
 
           {/* Amount */}
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-[13.78px] font-medium text-[#1A1A21]">
+            <Label className="text-[13.78px] font-medium text-[#1A1A21]">
               Amount (USD)
             </Label>
             <Input
@@ -151,7 +131,11 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
             <Label className="text-[13.78px] font-medium text-[#1A1A21]">
               Duration
             </Label>
-            <Select value={duration} onValueChange={setDuration} disabled={isSubmitting}>
+            <Select
+              value={duration}
+              onValueChange={setDuration}
+              disabled={isSubmitting}
+            >
               <SelectTrigger className="w-full h-[42px] rounded-[10px] border border-[#E4E3EC] bg-white text-[14px]">
                 <SelectValue placeholder="Select duration" />
               </SelectTrigger>
@@ -165,7 +149,7 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
             </Select>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="flex items-center gap-3">
             <Button
               type="button"
               variant="outline"
@@ -190,4 +174,3 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
 };
 
 export default AddLiquidityModal;
-

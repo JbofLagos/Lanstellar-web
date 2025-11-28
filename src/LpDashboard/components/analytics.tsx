@@ -5,7 +5,7 @@ import Chart from "react-apexcharts";
 import "apexcharts/dist/apexcharts.css";
 
 const Analytics = () => {
-  const [selectedDuration, setSelectedDuration] = useState("1");
+  const [selectedDuration] = useState("1");
   const [currentROIAmount, setCurrentROIAmount] = useState(0);
   const startTimeRef = useRef<Date>(new Date());
 
