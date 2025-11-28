@@ -24,7 +24,7 @@ const isProfileComplete = (user: User | null | undefined): boolean => {
 };
 
 export const GuestRoute = ({ children }: GuestRouteProps) => {
-  const { isAuthenticated, user, isLoadingUser, token } = useAuth();
+  const { isAuthenticated, user, isLoadingUser, token, error } = useAuth();
 
   // Only show loading state if there's a token and we're actually fetching user data
   // If there's no token, we can immediately show the login page
@@ -39,8 +39,14 @@ export const GuestRoute = ({ children }: GuestRouteProps) => {
     );
   }
 
-  // If user is authenticated, redirect based on profile completion
-  if (isAuthenticated) {
+  // If there was an error fetching user data, show the guest page (login/signup)
+  // Don't redirect to setup-profile when we couldn't fetch user data
+  if (error && !user) {
+    return <>{children}</>;
+  }
+
+  // If user is authenticated and we have user data, redirect based on profile completion
+  if (isAuthenticated && user) {
     // Check if profile is complete
     if (!isProfileComplete(user)) {
       return <Navigate to="/setup-profile" replace />;
@@ -48,7 +54,7 @@ export const GuestRoute = ({ children }: GuestRouteProps) => {
 
     // Redirect to appropriate dashboard based on user type
     const redirectPath =
-      user?.userType === "lender" ? "/lpdashboard" : "/dashboard";
+      user.userType === "lender" ? "/lpdashboard" : "/dashboard";
     return <Navigate to={redirectPath} replace />;
   }
 

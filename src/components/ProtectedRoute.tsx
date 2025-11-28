@@ -30,7 +30,7 @@ export const ProtectedRoute = ({
   allowedUserTypes,
   skipProfileCheck = false,
 }: ProtectedRouteProps) => {
-  const { isAuthenticated, user, isLoadingUser } = useAuth();
+  const { isAuthenticated, user, isLoadingUser, error } = useAuth();
   const location = useLocation();
 
   // Show loading state while checking authentication
@@ -50,8 +50,27 @@ export const ProtectedRoute = ({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // If there was an error fetching user data (not auth-related), show error or retry
+  // Don't redirect to setup-profile when we couldn't fetch user data
+  if (error && !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Failed to load user data</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-[#5B1E9F] text-white rounded-lg hover:bg-[#5B1E9F]/90"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Check if profile is complete (unless skipProfileCheck is true)
-  if (!skipProfileCheck && !isProfileComplete(user)) {
+  // Only check if we successfully fetched user data
+  if (!skipProfileCheck && user && !isProfileComplete(user)) {
     return <Navigate to="/setup-profile" replace />;
   }
 
