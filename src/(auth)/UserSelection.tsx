@@ -97,6 +97,25 @@ const UserTypePage = () => {
               </div>
             </div>
           </div>
+          <div className="flex flex-col gap-6">
+            <p className="text-[#8C94A6] text-sm sm:text-[13px] leading-relaxed">
+              By continuing, you agree to our{" "}
+              <a href="/terms" className="text-[#5B1E9F]">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="/privacy" className="text-[#5B1E9F]">
+                Privacy Policy
+              </a>
+              .
+            </p>
+            <p className="text-[#8C94A6] text-sm sm:text-[13px] leading-relaxed">
+              Already have an account?{" "}
+              <a href="/login" className="text-[#5B1E9F] cursor-pointer">
+                Login
+              </a>
+            </p>
+          </div>
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-6 mt-8">
