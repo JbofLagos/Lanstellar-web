@@ -11,8 +11,13 @@ import {
 import { useCurrentUser } from "@/hook/useCurrentUser";
 import { useLogout } from "@/hook/useLogout";
 import { useAppKitAccount } from "@reown/appkit/react";
+import { Menu } from "lucide-react";
 
-const Navbar = () => {
+interface NavbarProps {
+  onMenuClick?: () => void;
+}
+
+const Navbar = ({ onMenuClick }: NavbarProps) => {
   const { user } = useCurrentUser();
   const { logout } = useLogout();
   const { isConnected, address } = useAppKitAccount();
@@ -28,15 +33,25 @@ const Navbar = () => {
   };
 
   return (
-    <div className="p-5 border-b border-b-[#E5E5E5] px-10 font-fredoka flex items-center justify-between bg-white sticky top-0 z-10">
-      <div>
-        <h2 className="text-[24px] text-[#49576D]">
-          Welcome{" "}
-          <span className="text-black">
-            {user?.fullName || user?.companyName || user?.username || "Guest"}{" "}
-            👋,
-          </span>
-        </h2>
+    <div className="p-4 md:p-5 border-b border-b-[#E5E5E5] px-4 md:px-10 font-fredoka flex items-center justify-between bg-white sticky top-0 z-10">
+      <div className="flex items-center gap-3">
+        {/* Mobile menu button */}
+        <button
+          onClick={onMenuClick}
+          className="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden"
+        >
+          <Menu size={22} className="text-[#49576D]" />
+        </button>
+        <div>
+          <h2 className="text-[18px] md:text-[24px] text-[#49576D]">
+            Welcome{" "}
+            <span className="text-black hidden sm:inline">
+              {user?.fullName || user?.companyName || user?.username || "Guest"}{" "}
+              👋,
+            </span>
+            <span className="text-black sm:hidden">👋</span>
+          </h2>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 justify-center">
