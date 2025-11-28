@@ -198,8 +198,7 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
             Add Liquidity
           </DialogTitle>
           <DialogDescription className="text-[14px] text-[#8C94A6]">
-            Provide liquidity to the pool by entering your wallet address,
-            amount, and duration.
+            Provide liquidity to the pool by entering the amount and duration.
           </DialogDescription>
         </DialogHeader>
 

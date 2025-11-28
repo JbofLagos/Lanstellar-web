@@ -5,6 +5,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { Toaster } from "@/components/ui/sonner";
 import { AppKitProvider } from "./Provider.tsx";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -12,6 +13,7 @@ createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <App />
         <Toaster />
+        <ReactQueryDevtools initialIsOpen={false} />
       </BrowserRouter>
     </AppKitProvider>
   </StrictMode>
