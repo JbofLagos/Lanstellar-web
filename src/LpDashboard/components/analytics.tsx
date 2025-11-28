@@ -311,7 +311,7 @@ const Analytics = () => {
       {/* Analytics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Expected ROI Card */}
-        <Card className="border-[0.86px] border-[#E4E3EC] rounded-[8px] shadow-none bg-gradient-to-br from-[#439EFF] to-[#5B1E9F]">
+        <Card className="border-[0.86px] border-[#E4E3EC] rounded-[8px] shadow-none bg-gradient-to-br to-[#010101] from-[#5B1E9F]">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-start gap-3 flex-col">
