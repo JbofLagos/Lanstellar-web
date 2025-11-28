@@ -23,8 +23,8 @@ import { useCurrentUser } from "@/hook/useCurrentUser";
 
 interface RepaymentPlan {
   id: string;
-  installments: number;
-  percent: number;
+  duration: number;
+  interestRate: number;
 }
 
 interface RequestLoanFormProps {
@@ -36,7 +36,6 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
   onSuccess,
   preSelectedAssetId,
 }) => {
-  const [plan, setPlan] = useState<string>("one");
   const [purpose, setPurpose] = useState<string>("");
   const [assetId, setAssetId] = useState<string>(preSelectedAssetId || "");
   const [amount, setAmount] = useState<string>("");
@@ -53,9 +52,9 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
   } = useRequestLoan();
 
   const repaymentPlans: RepaymentPlan[] = [
-    { id: "one", installments: 1, percent: 5 },
-    { id: "two", installments: 2, percent: 10 },
-    { id: "three", installments: 3, percent: 15 },
+    { id: "one", duration: 1, interestRate: 2 },
+    { id: "two", duration: 2, interestRate: 4 },
+    { id: "three", duration: 3, interestRate: 6 },
   ];
 
   const { user: userData } = useCurrentUser();
@@ -101,7 +100,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
     const selectedAsset = assets.find((asset) => asset._id === assetId);
     if (!selectedAsset) return 0;
     const worth = Number(selectedAsset.assetWorth);
-    return worth > 0 ? Math.floor(worth * 0.6) : 0;
+    return worth > 0 ? Math.floor(worth * 0.4) : 0; // 40% of asset value
   };
 
   const validateLoanAmount = (value: string): boolean => {
@@ -122,7 +121,6 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
   };
 
   const resetForm = (): void => {
-    setPlan("one");
     setPurpose("");
     setAssetId("");
     setAmount("");
@@ -150,7 +148,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
         "User information not loaded. Please refresh and try again."
       );
 
-    const selectedPlan = repaymentPlans.find((p) => p.id === plan);
+    const selectedPlan = repaymentPlans.find((p) => p.duration === Number(duration));
     if (!selectedPlan) return toast.error("Please select a repayment plan");
 
     const formData: LoanRequest = {
@@ -159,8 +157,8 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
       assetId,
       amount: Number(amount),
       duration: Number(duration),
-      paymentPlan: selectedPlan.installments,
-      interestRate: selectedPlan.percent,
+      paymentPlan: 1,
+      interestRate: selectedPlan.interestRate,
     };
 
     // Use the submitLoanRequest function from the hook
@@ -249,7 +247,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
           />
           <div className="flex flex-col gap-1">
             <span className="text-[#A19821] font-medium text-[12px]">
-              *Maximum of 60% of asset value
+              *Maximum of 40% of asset value
             </span>
             {assetId && getMaxLoanAmount() > 0 && (
               <span className="text-[#10b981] font-medium text-[11px]">
@@ -271,10 +269,9 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Duration</SelectLabel>
+                <SelectItem value="1">1 Month</SelectItem>
+                <SelectItem value="2">2 Months</SelectItem>
                 <SelectItem value="3">3 Months</SelectItem>
-                <SelectItem value="6">6 Months</SelectItem>
-                <SelectItem value="12">12 Months</SelectItem>
-                <SelectItem value="24">24 Months</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>

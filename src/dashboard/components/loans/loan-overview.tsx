@@ -452,8 +452,7 @@ const LoanOverview = () => {
                       Payment Schedule
                     </p>
                     <p className="text-sm font-semibold text-[#49576D]">
-                      {selectedLoan.paymentPlan} payments over{" "}
-                      {selectedLoan.duration} months
+                      within {selectedLoan.duration} months
                     </p>
                   </div>
                 </div>
