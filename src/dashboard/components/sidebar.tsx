@@ -5,8 +5,6 @@ import { Link, useLocation } from "react-router-dom";
 const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
-  const currentPath = location.pathname.split("/").pop() || "";
-  const [activeItem, setActiveItem] = useState(currentPath);
 
   const menuItems = [
     { id: "", label: "Dashboard", icon: "/icons/dashboard.svg" },
@@ -19,8 +17,14 @@ const Sidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
 
-  const handleItemClick = (itemId: string) => {
-    setActiveItem(itemId);
+  // Check if a menu item is active based on current URL
+  const isItemActive = (itemId: string) => {
+    const basePath = "/dashboard";
+    const fullPath = itemId ? `${basePath}/${itemId}` : basePath;
+    // Exact match for dashboard, startsWith for nested routes
+    return itemId === ""
+      ? location.pathname === basePath || location.pathname === `${basePath}/`
+      : location.pathname.startsWith(fullPath);
   };
 
   return (
@@ -56,13 +60,12 @@ const Sidebar = () => {
       <nav className="flex-1 px-2 py-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
-            const isActive = activeItem === item.id;
+            const isActive = isItemActive(item.id);
 
             return (
               <li key={item.id}>
                 <Link to={`/dashboard/${item.id}`}>
                   <button
-                    onClick={() => handleItemClick(item.id)}
                     className={` cursor-pointer whitespace-nowrap flex items-center px-3 h-[34px] w-[231px] rounded-[3.45px] transition-colors ${
                       isActive ? "bg-[#F7F7F8] text-[#49576D" : " text-[#49576D"
                     }`}

@@ -9,7 +9,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle, CircleMinus, Clock, Loader, Trash2 } from "lucide-react";
+import {
+  CheckCircle,
+  CircleMinus,
+  Clock,
+  Loader,
+  Trash2,
+  MapPin,
+  Calendar,
+  Percent,
+  CreditCard,
+  Wallet,
+  Receipt,
+  Fuel,
+  Banknote,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -225,125 +239,201 @@ const LoanOverview = () => {
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md rounded-xl">
+        <DialogContent className="max-w-lg p-0 overflow-hidden rounded-2xl border-0">
           {selectedLoan && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-lg font-semibold capitalize">
-                  {selectedLoan.loanPurpose}
-                </DialogTitle>
-              </DialogHeader>
+            <div className="flex flex-col">
+              {/* Header with gradient background */}
+              <div className="bg-gradient-to-br from-[#5B1E9F] to-[#439EFF] p-6 text-white">
+                <DialogHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/80 text-sm font-medium capitalize">
+                      {selectedLoan.assetId.assetCategory}
+                    </span>
+                    <span
+                      className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                        selectedLoan.assetId.verified === true ||
+                        String(selectedLoan.assetId.verified) === "true"
+                          ? "bg-emerald-400/20 text-emerald-100"
+                          : "bg-amber-400/20 text-amber-100"
+                      }`}
+                    >
+                      {selectedLoan.assetId.verified === true ||
+                      String(selectedLoan.assetId.verified) === "true"
+                        ? "✓ Verified"
+                        : "⏳ In Review"}
+                    </span>
+                  </div>
+                  <DialogTitle className="text-2xl font-bold capitalize tracking-tight">
+                    {selectedLoan.loanPurpose}
+                  </DialogTitle>
+                </DialogHeader>
 
-              <div className="flex flex-row items-center justify-between gap-2">
-                <span className="text-[#8C94A6] capitalize font-medium text-[12.06px]">
-                  {selectedLoan.assetId.assetCategory}
-                </span>
-                <span
-                  className={`text-[10.34px] gap-1 font-medium flex flex-row items-center justify-center text-[#1A1A21] h-[20px] w-[76px] rounded-[4px] ${
-                    selectedLoan.assetId.verified === true ||
-                    String(selectedLoan.assetId.verified) === "true"
-                      ? "bg-[#D3FED3]"
-                      : "bg-[#FCDB86]"
-                  } bg-opacity-10`}
-                >
-                  {selectedLoan.assetId.verified === true ||
-                  String(selectedLoan.assetId.verified) === "true"
-                    ? "Verified ✅"
-                    : "In Review ⏳"}
-                </span>
+                {/* Loan amount highlight */}
+                <div className="mt-4 flex items-baseline gap-2">
+                  <span className="text-4xl font-bold">
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      minimumFractionDigits: 0,
+                    }).format(selectedLoan.amount)}
+                  </span>
+                  <span className="text-white/70 text-sm">loan amount</span>
+                </div>
+
+                {/* Quick stats */}
+                <div className="mt-4 flex gap-4">
+                  <div className="flex items-center gap-1.5 text-white/80 text-sm">
+                    <Calendar className="w-4 h-4" />
+                    <span>{selectedLoan.duration} months</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-white/80 text-sm">
+                    <Percent className="w-4 h-4" />
+                    <span>{selectedLoan.interestRate}% interest</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-white/80 text-sm">
+                    <CreditCard className="w-4 h-4" />
+                    <span>{selectedLoan.paymentPlan} payments</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <h2 className="text-[13.78px] capitalize font-semibold">
-                  {selectedLoan.assetId.assetTitle}
-                </h2>
-                <p className="text-[13.78px] text-[#1A1A21] font-medium">
-                  {selectedLoan.assetId.assetLocation}
-                </p>
-              </div>
-              <DocsPreview
-                docs={
-                  Array.isArray(selectedLoan.assetId.docs)
-                    ? selectedLoan.assetId.docs.map((str) => ({
-                        cloudinaryUrl: str,
-                      }))
-                    : selectedLoan.assetId.docs
-                }
-              />
 
-              <div className="flex flex-col gap-4">
-                <div className=" text-[12px] font-medium text-[#1A1A1A] flex flex-col gap-2">
-                  <div className="flex justify-between">
-                    <span className="text-[#49576D] text-[13.78px] font-medium">
-                      Purpose of loan
-                    </span>
-                    <span className=" capitalize">
-                      {selectedLoan.loanPurpose}
-                    </span>
+              {/* Content */}
+              <div className="p-6 space-y-5">
+                {/* Collateral Asset Card */}
+                <div className="bg-[#F8F8FB] rounded-xl p-4">
+                  <p className="text-xs font-medium text-[#8C94A6] uppercase tracking-wider mb-2">
+                    Collateral Asset
+                  </p>
+                  <h3 className="text-[15px] font-semibold text-[#1A1A21] capitalize">
+                    {selectedLoan.assetId.assetTitle}
+                  </h3>
+                  <div className="flex items-center gap-1.5 mt-1 text-[#49576D] text-sm">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>{selectedLoan.assetId.assetLocation}</span>
                   </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-[#49576D] text-[13.78px] font-medium">
-                      Asset Collateral
-                    </span>
-                    <span>{selectedLoan.assetId.assetTitle}</span>
+                  <div className="mt-3">
+                    <DocsPreview
+                      docs={
+                        Array.isArray(selectedLoan.assetId.docs)
+                          ? selectedLoan.assetId.docs.map((str) => ({
+                              cloudinaryUrl: str,
+                            }))
+                          : selectedLoan.assetId.docs
+                      }
+                    />
                   </div>
+                </div>
 
-                  <div className="flex justify-between">
-                    <span className="text-[#49576D] text-[13.78px] font-medium">
-                      Amount Loaned
-                    </span>
-                    <span>${selectedLoan.amount}</span>
+                {/* Fees Breakdown */}
+                <div>
+                  <p className="text-xs font-medium text-[#8C94A6] uppercase tracking-wider mb-3">
+                    Payment Breakdown
+                  </p>
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between py-2 border-b border-dashed border-[#E5E5E5]">
+                      <div className="flex items-center gap-2.5 text-[#49576D]">
+                        <div className="w-7 h-7 rounded-lg bg-[#5B1E9F]/10 flex items-center justify-center">
+                          <Wallet className="w-3.5 h-3.5 text-[#5B1E9F]" />
+                        </div>
+                        <span className="text-sm font-medium">
+                          Principal Amount
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold text-[#1A1A21]">
+                        {new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(selectedLoan.amount)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2 border-b border-dashed border-[#E5E5E5]">
+                      <div className="flex items-center gap-2.5 text-[#49576D]">
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                          <Percent className="w-3.5 h-3.5 text-amber-600" />
+                        </div>
+                        <span className="text-sm font-medium">
+                          Interest ({selectedLoan.interestRate}%)
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold text-[#1A1A21]">
+                        {new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(
+                          selectedLoan.amount *
+                            (selectedLoan.interestRate / 100)
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2 border-b border-dashed border-[#E5E5E5]">
+                      <div className="flex items-center gap-2.5 text-[#49576D]">
+                        <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                          <Receipt className="w-3.5 h-3.5 text-blue-600" />
+                        </div>
+                        <span className="text-sm font-medium">
+                          Processing Fee (0.8%)
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold text-[#1A1A21]">
+                        {new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(selectedLoan.amount * 0.008)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2 border-b border-dashed border-[#E5E5E5]">
+                      <div className="flex items-center gap-2.5 text-[#49576D]">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                          <Fuel className="w-3.5 h-3.5 text-emerald-600" />
+                        </div>
+                        <span className="text-sm font-medium">
+                          Gas Fee (0.2%)
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold text-[#1A1A21]">
+                        {new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(selectedLoan.amount * 0.002)}
+                      </span>
+                    </div>
+
+                    {/* Total */}
+                    <div className="flex items-center justify-between pt-3 mt-1">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-[#1A1A21] flex items-center justify-center">
+                          <Banknote className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <span className="text-sm font-semibold text-[#1A1A21]">
+                          Total Repayment
+                        </span>
+                      </div>
+                      <span className="text-lg font-bold text-[#1A1A21]">
+                        {new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(
+                          selectedLoan.amount *
+                            (1 +
+                              selectedLoan.interestRate / 100 +
+                              0.008 +
+                              0.002)
+                        )}
+                      </span>
+                    </div>
                   </div>
+                </div>
 
-                  <div className="flex justify-between">
-                    <span className="text-[#49576D] text-[13.78px] font-medium">
-                      Loan Duration
-                    </span>
-                    <span>{selectedLoan.duration} Months</span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-[#49576D] text-[13.78px] font-medium">
-                      Interest Rate – {selectedLoan.interestRate}%
-                    </span>
-                    <span>
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(
-                        selectedLoan.amount * (selectedLoan.interestRate / 100)
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-[#49576D] text-[13.78px] font-medium">
-                      Processing Fee – 0.8%
-                    </span>
-                    <span>
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(selectedLoan.amount * 0.008)}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between text-[13.78px] font-medium">
-                    <span className="text-[#49576D]">Gas Fee – 0.2%</span>
-                    <span>
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(selectedLoan.amount * 0.002)}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-[#49576D] text-[13.78px] font-medium">
-                      Installment Amount – {selectedLoan.paymentPlan} payments
-                      over {selectedLoan.duration} months
-                    </span>
-                    <span>
+                {/* Installment Info */}
+                <div className="bg-gradient-to-r from-[#F8F8FB] to-[#F0F4FF] rounded-xl p-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-[#8C94A6] font-medium">
+                      Per Installment
+                    </p>
+                    <p className="text-xl font-bold text-[#1A1A21]">
                       {new Intl.NumberFormat("en-US", {
                         style: "currency",
                         currency: "USD",
@@ -355,51 +445,39 @@ const LoanOverview = () => {
                             0.002)) /
                           selectedLoan.paymentPlan
                       )}
-                    </span>
+                    </p>
                   </div>
-
-                  <div className="flex justify-between ">
-                    <span className="text-[#49576D] text-[13.78px] font-medium">
-                      Total Repayment Amount
-                    </span>
-                    <span className="text-black">
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(
-                        selectedLoan.amount *
-                          (1 + selectedLoan.interestRate / 100 + 0.008 + 0.002)
-                      )}
-                    </span>
+                  <div className="text-right">
+                    <p className="text-xs text-[#8C94A6] font-medium">
+                      Payment Schedule
+                    </p>
+                    <p className="text-sm font-semibold text-[#49576D]">
+                      {selectedLoan.paymentPlan} payments over{" "}
+                      {selectedLoan.duration} months
+                    </p>
                   </div>
                 </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <Button className="flex-1 h-12 bg-gradient-to-r from-[#5B1E9F] to-[#439EFF] hover:opacity-90 text-white rounded-xl font-semibold text-[15px] shadow-lg shadow-[#5B1E9F]/20">
+                    Repay Now
+                  </Button>
+                  <Button
+                    onClick={handleDeleteLoan}
+                    disabled={isDeleting}
+                    variant="outline"
+                    className="h-12 w-12 rounded-xl border-red-200 hover:bg-red-50 hover:border-red-300 text-red-500"
+                  >
+                    {isDeleting ? (
+                      <Loader className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-5 h-5" />
+                    )}
+                  </Button>
+                </div>
               </div>
-              <div className=" flex flex-row items-center justify-between gap-2 mt-4">
-                <Button className=" cursor-pointer w-[90%] bg-gradient-to-r from-[#439EFF] to-[#5B1E9F] text-white px-4 py-2 rounded-[10px] flex items-center gap-2">
-                  Repay Now –{" "}
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "USD",
-                  }).format(
-                    (selectedLoan.amount *
-                      (1 + selectedLoan.interestRate / 100 + 0.008 + 0.002)) /
-                      selectedLoan.paymentPlan
-                  )}{" "}
-                  Due
-                </Button>
-                <Button
-                  onClick={handleDeleteLoan}
-                  disabled={isDeleting}
-                  className="cursor-pointer w-fit bg-[#FF3B30]/30 hover:bg-[#FF3B30]/50 text-[#FF3B30] px-4 py-2 rounded-[10px] flex items-center gap-2 mx-auto justify-center"
-                >
-                  {isDeleting ? (
-                    <Loader className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-            </>
+            </div>
           )}
         </DialogContent>
       </Dialog>

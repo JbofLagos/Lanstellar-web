@@ -199,22 +199,24 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectLabel>Your Assets</SelectLabel>
-                {assets.length === 0 ? (
+                <SelectLabel>Your Verified Assets</SelectLabel>
+                {assets.filter((asset) => asset.verified).length === 0 ? (
                   <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
                     <AlertCircle className="w-4 h-4" />
-                    No assets available
+                    No verified assets available
                   </div>
                 ) : (
-                  assets.map((asset) => (
-                    <SelectItem key={asset._id} value={asset._id}>
-                      {asset.assetTitle} - $
-                      {Number(asset.assetWorth).toLocaleString()}{" "}
-                      <span className="text-xs text-muted-foreground ml-1">
-                        ({asset.assetCategory})
-                      </span>
-                    </SelectItem>
-                  ))
+                  assets
+                    .filter((asset) => asset.verified)
+                    .map((asset) => (
+                      <SelectItem key={asset._id} value={asset._id}>
+                        {asset.assetTitle} - $
+                        {Number(asset.assetWorth).toLocaleString()}{" "}
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({asset.assetCategory})
+                        </span>
+                      </SelectItem>
+                    ))
                 )}
               </SelectGroup>
             </SelectContent>
