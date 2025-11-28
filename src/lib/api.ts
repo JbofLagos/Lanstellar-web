@@ -4,7 +4,7 @@ import { clearToken } from "./auth";
 export const API_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
-  baseURL:  "http://localhost:5858/api",
+  baseURL: API_URL || "http://localhost:5858/api",
 });
 
 // Helper function to get cookie value
