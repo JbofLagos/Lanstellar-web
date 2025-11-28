@@ -11,10 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 import { type LoanRequest } from "@/lib/api-service";
@@ -282,7 +279,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
         </div>
 
         {/* Repayment Plan */}
-        <div className="grid gap-1.5">
+        {/* <div className="grid gap-1.5">
           <Label className="text-[13.78px] font-medium text-[#1A1A21]">
             Select Repayment Plan
           </Label>
@@ -324,7 +321,7 @@ const RequestLoanForm: React.FC<RequestLoanFormProps> = ({
               </label>
             ))}
           </RadioGroup>
-        </div>
+        </div> */}
 
         {/* Submit */}
         <div className="mt-6">

@@ -1,5 +1,45 @@
 export const CONTRACT_ADDRESS = "0x5f455a1E9e551375c3476024d77EF75AC5Fdd055";
-export const CURRENCY_CONTRACT_ADDRESS = "0x640F817F51a4527204b360c2A6f87050ed2D795B";
+export const CURRENCY_CONTRACT_ADDRESS =
+  "0x640F817F51a4527204b360c2A6f87050ed2D795B" as `0x${string}`;
+
+// Standard ERC20 ABI for approve and allowance
+export const ERC20_ABI = [
+  {
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    name: "approve",
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    name: "allowance",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "decimals",
+    outputs: [{ name: "", type: "uint8" }],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
+
 export const CONTRACT_ABI = [
   {
     inputs: [

@@ -35,7 +35,9 @@ interface UseBlockchainProps {
   contractAddress: Address;
 }
 
-export const useBlockchain = ({ contractAddress = CONTRACT_ADDRESS as Address }: UseBlockchainProps) => {
+export const useBlockchain = ({
+  contractAddress = CONTRACT_ADDRESS as Address,
+}: UseBlockchainProps) => {
   const { isConnected, address } = useAppKitAccount();
 
   const {
