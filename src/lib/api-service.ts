@@ -68,6 +68,24 @@ export interface LoanRequest {
   interestRate: number;
 }
 
+export interface LiquidityRequest {
+  amount: number;
+  interest: number;
+  duration: number;
+  hash: string;
+}
+
+export interface Liquidity {
+  _id: string;
+  amount: number;
+  interest: number;
+  duration: number;
+  hash: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 class ApiService {
   constructor() {}
 
@@ -219,7 +237,7 @@ class ApiService {
   getLoans = async () => {
     return this.request("GET", "/loan/user");
   };
-  
+
   getAllLoans = async () => {
     return this.request("GET", "/loan");
   };
@@ -245,6 +263,18 @@ class ApiService {
       successMessage: "Documents uploaded successfully!",
     });
   };
+
+  // Liquidity-related API calls
+  addLiquidity = async (liquidityData: LiquidityRequest) => {
+    return this.request("POST", "/liquidity/add-liquidity", liquidityData, {
+      showSuccessToast: true,
+      successMessage: "Liquidity added successfully!",
+    });
+  };
+
+  getLiquidity = async () => {
+    return this.request<Liquidity[]>("GET", "/liquidity");
+  };
 }
 
 export const apiService = new ApiService();
@@ -264,4 +294,6 @@ export const {
   deleteLoan,
   joinWaitlist,
   uploadDocuments,
+  addLiquidity,
+  getLiquidity,
 } = apiService;

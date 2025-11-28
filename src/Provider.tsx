@@ -39,7 +39,7 @@ const wagmiAdapter = new WagmiAdapter({
 // 5. Create modal
 createAppKit({
   adapters: [wagmiAdapter],
-  networks,
+  networks: [baseSepolia],
   defaultNetwork: baseSepolia, // Force Base Sepolia as default
   projectId,
   metadata,

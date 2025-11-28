@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { truncateAddress } from "@/lib/utils";
 import { useDepositLiquidity } from "@/hook/useDepositLiquidity";
+import { useLiquidity } from "@/hook/useLiquidity";
 import { parseUnits } from "viem";
 import { CURRENCY_CONTRACT_ADDRESS } from "@/constant/contractABI";
 import { Loader2 } from "lucide-react";
@@ -36,7 +37,53 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { address } = useAppKitAccount();
-  const { depositLiquidity, isLoading, isApproving } = useDepositLiquidity();
+  const {
+    depositLiquidity,
+    isLoading,
+    isApproving,
+    isConfirmed,
+    hash,
+    resetDeposit,
+  } = useDepositLiquidity();
+  const { submitLiquidity, isSubmitting: isSubmittingToAPI } = useLiquidity();
+
+  // Track pending submission data for API call after blockchain confirmation
+  const pendingSubmissionRef = useRef<{
+    amount: number;
+    interest: number;
+    duration: number;
+  } | null>(null);
+
+  // Submit to API when blockchain transaction is confirmed
+  useEffect(() => {
+    if (isConfirmed && hash && pendingSubmissionRef.current) {
+      const { amount, interest, duration } = pendingSubmissionRef.current;
+
+      console.log("✅ Blockchain deposit confirmed, submitting to API...", {
+        amount,
+        interest,
+        duration,
+        hash,
+      });
+
+      // Submit to API
+      submitLiquidity({
+        amount,
+        interest,
+        duration,
+        hash,
+      });
+
+      // Clear pending submission
+      pendingSubmissionRef.current = null;
+
+      // Reset form and close modal
+      setAmount("");
+      setDuration("");
+      resetDeposit();
+      onOpenChange(false);
+    }
+  }, [isConfirmed, hash, submitLiquidity, resetDeposit, onOpenChange]);
 
   // Calculate APY based on liquidity amount tiers
   const getAPYForLiquidity = (depositAmount: number): number => {
@@ -91,6 +138,13 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
       toast.error("Please select a duration");
       return;
     }
+
+    // Store pending submission data for API call after blockchain confirmation
+    pendingSubmissionRef.current = {
+      amount: currentAmount,
+      interest: currentAPY,
+      duration: parseInt(duration),
+    };
 
     // Convert APY to basis points (1% = 100 BP)
     const interestBP = BigInt(currentAPY * 100);
@@ -261,7 +315,7 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
               Cancel
             </Button>
             <Button
-              disabled={isLoading}
+              disabled={isLoading || isSubmittingToAPI}
               onClick={handleSubmit}
               className="w-full sm:w-auto bg-[#504CF6] hover:bg-[#504CF6]/90 text-white"
             >
@@ -272,6 +326,10 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
               ) : isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" /> Adding...
+                </>
+              ) : isSubmittingToAPI ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Saving...
                 </>
               ) : (
                 "Add Liquidity"
