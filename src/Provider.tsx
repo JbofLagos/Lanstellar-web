@@ -2,18 +2,18 @@ import type React from "react";
 import { createAppKit } from "@reown/appkit/react";
 
 import { WagmiProvider } from "wagmi";
-import { arbitrum, base, baseSepolia, mainnet } from "@reown/appkit/networks";
+import { baseSepolia } from "@reown/appkit/networks";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 
 // 0. Setup queryClient
 const queryClient = new QueryClient();
 
-type AppKitNetwork =
-  | typeof baseSepolia
-  | typeof base
-  | typeof mainnet
-  | typeof arbitrum;
+  // type AppKitNetwork =
+  //   | typeof baseSepolia
+  //   | typeof base
+  //   | typeof mainnet
+  //   | typeof arbitrum;
 
 // 1. Get projectId from https://dashboard.reown.com
 const projectId = import.meta.env.VITE_REOWN_PROJECT_ID;
