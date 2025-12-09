@@ -20,7 +20,6 @@ interface AssetsListProps {
 
 const AssetsList = ({ sortBy }: AssetsListProps) => {
   const { assets, isLoadingAssets, error, refetch } = useAssets();
-  console.log("Assets loaded:", assets);
 
   const sortedAssets = useMemo(() => {
     if (isLoadingAssets || !assets || !Array.isArray(assets)) return [];

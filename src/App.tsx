@@ -20,6 +20,7 @@ import UserTypePage from "./(auth)/UserSelection";
 import Informations from "./(auth)/Informations";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { GuestRoute } from "./components/GuestRoute";
+import WalletPage from "./dashboard/pages/WalletPage";
 
 const HomePage = () => {
   return (
@@ -153,6 +154,16 @@ const App = () => {
             <LpDashboardLayout>
               <SettingsPage />
             </LpDashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/wallet"
+        element={
+          <ProtectedRoute allowedUserTypes={["borrower"]}>
+            <DashboardLayout>
+              <WalletPage />
+            </DashboardLayout>
           </ProtectedRoute>
         }
       />

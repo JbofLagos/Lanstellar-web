@@ -7,6 +7,7 @@ import {
   Wallet,
   Settings,
   X,
+  Banknote,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -22,7 +23,8 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
   const menuItems = [
     { id: "", label: "Dashboard", icon: LayoutDashboard },
     { id: "assets", label: "My Assets", icon: Coins },
-    { id: "loans", label: "Loans", icon: Wallet },
+    { id: "loans", label: "Loans", icon: Banknote },
+    { id: "wallet", label: "Wallet", icon: Wallet },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
