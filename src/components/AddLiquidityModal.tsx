@@ -149,10 +149,13 @@ const AddLiquidityModal = ({ open, onOpenChange }: AddLiquidityModalProps) => {
     // Convert APY to basis points (1% = 100 BP)
     const interestBP = BigInt(currentAPY * 100);
 
+    // Get duration in months
+    const durationMonths = parseInt(duration);
+
     await depositLiquidity({
-      loanId: 2n,
       tokenAddress: CURRENCY_CONTRACT_ADDRESS,
       amount: parseUnits(amount, 18),
+      lockDuration: durationMonths, // Duration in months (will be converted to seconds in the hook)
       interestBP, // Dynamic APY based on deposit amount
     });
   };

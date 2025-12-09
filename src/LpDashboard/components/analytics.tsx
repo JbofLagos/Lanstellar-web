@@ -460,7 +460,7 @@ const Analytics = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 flex items-center justify-between">
             <div className="text-[11px] text-[#8C94A6]">
               {liquidity?.length > 0
                 ? `${liquidity?.length} active position${
@@ -468,6 +468,9 @@ const Analytics = () => {
                   }`
                 : "No liquidity added yet"}
             </div>
+            <button className="px-4 py-2 rounded-[8px] bg-[#504CF6] text-white text-[11px] cursor-pointer hover:bg-[#504CF6]/90">
+              Withdraw Liquidity
+            </button>
           </CardContent>
         </Card>
 

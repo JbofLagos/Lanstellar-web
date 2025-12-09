@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = "0x5f455a1E9e551375c3476024d77EF75AC5Fdd055";
+export const CONTRACT_ADDRESS = "0x565498655433554310e10C0319341B6D472B4b5F";
 export const CURRENCY_CONTRACT_ADDRESS =
   "0x640F817F51a4527204b360c2A6f87050ed2D795B" as `0x${string}`;
 
@@ -361,11 +361,6 @@ export const CONTRACT_ABI = [
   {
     inputs: [
       {
-        internalType: "uint64",
-        name: "loanId",
-        type: "uint64",
-      },
-      {
         internalType: "address",
         name: "tokenAddr",
         type: "address",
@@ -377,13 +372,73 @@ export const CONTRACT_ABI = [
       },
       {
         internalType: "uint64",
+        name: "lockDuration",
+        type: "uint64",
+      },
+      {
+        internalType: "uint64",
         name: "_interestBP",
         type: "uint64",
       },
     ],
     name: "depositLiquidity",
-    outputs: [],
-    stateMutability: "payable",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "depositId",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "deposits",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "startTime",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "lockDuration",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "interestBP",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+      {
+        internalType: "bool",
+        name: "withdrawn",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -572,64 +627,6 @@ export const CONTRACT_ABI = [
         name: "",
         type: "uint256",
       },
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "liquidityBalances",
-    outputs: [
-      {
-        internalType: "address",
-        name: "currency",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "interestRateBP",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "loanFunders",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
     ],
     name: "loans",
     outputs: [
@@ -676,6 +673,19 @@ export const CONTRACT_ABI = [
       {
         internalType: "uint256",
         name: "amountFunded",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "nextDepositId",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
         type: "uint256",
       },
     ],
@@ -851,22 +861,36 @@ export const CONTRACT_ABI = [
   {
     inputs: [
       {
-        internalType: "uint64",
-        name: "loanId",
-        type: "uint64",
-      },
-      {
         internalType: "address",
-        name: "tokenAddr",
+        name: "",
         type: "address",
       },
       {
         internalType: "uint256",
-        name: "amount",
+        name: "",
         type: "uint256",
       },
     ],
-    name: "withdrawLiquidity",
+    name: "userDepositIds",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "depositId",
+        type: "uint256",
+      },
+    ],
+    name: "withdrawLiquidiy",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

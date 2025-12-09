@@ -42,15 +42,15 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
         >
           <Menu size={22} className="text-[#49576D]" />
         </button>
-        <div>
+      <div>
           <h2 className="text-[18px] md:text-[24px] text-[#49576D]">
-            Welcome{" "}
+          Welcome{" "}
             <span className="text-black hidden sm:inline">
               {user?.fullName || user?.companyName || user?.username || "Guest"}{" "}
               👋,
             </span>
             <span className="text-black sm:hidden">👋</span>
-          </h2>
+        </h2>
         </div>
       </div>
 

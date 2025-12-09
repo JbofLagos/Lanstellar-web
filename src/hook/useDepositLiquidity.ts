@@ -5,9 +5,9 @@
  * const { depositLiquidity, isDepositing, isConfirmed } = useDepositLiquidity();
  *
  * await depositLiquidity({
- *   loanId: 1n,
  *   tokenAddress: "0x...",
- *   amount: parseUnits("100", 6), // 100 USDC
+ *   amount: parseUnits("100", 18), // 100 tokens
+ *   lockDuration: 3, // 3 months (will be converted to seconds)
  *   interestBP: 1200n, // 12% in basis points
  * });
  */
@@ -29,9 +29,9 @@ import {
 } from "@/constant/contractABI";
 
 interface DepositLiquidityParams {
-  loanId: bigint;
   tokenAddress: Address;
   amount: bigint;
+  lockDuration: number; // Duration in months (will be converted to seconds)
   interestBP: bigint;
   value?: bigint; // For native token deposits
 }
@@ -190,19 +190,26 @@ export const useDepositLiquidity = () => {
   };
 
   const depositLiquidity = async ({
-    loanId,
     tokenAddress,
     amount,
+    lockDuration,
     interestBP,
     value,
   }: DepositLiquidityParams): Promise<void> => {
     // Set current token for allowance check
     setCurrentTokenAddress(tokenAddress);
 
+    // Convert lockDuration from months to seconds
+    // Assuming 30 days per month: months * 30 days * 24 hours * 60 minutes * 60 seconds
+    const lockDurationSeconds = BigInt(
+      Math.floor(lockDuration * 30 * 24 * 60 * 60)
+    );
+
     console.log("🚀 Starting deposit liquidity...", {
-      loanId: loanId.toString(),
       tokenAddress,
       amount: amount.toString(),
+      lockDurationMonths: lockDuration,
+      lockDurationSeconds: lockDurationSeconds.toString(),
       interestBP: interestBP.toString(),
       value: value?.toString(),
       userAddress: address,
@@ -284,7 +291,12 @@ export const useDepositLiquidity = () => {
         address: CONTRACT_ADDRESS as Address,
         abi: CONTRACT_ABI,
         functionName: "depositLiquidity",
-        args: [loanId, tokenAddress, amount, interestBP],
+        args: [
+          tokenAddress,
+          amount,
+          lockDurationSeconds, // uint64 lockDuration in seconds
+          interestBP, // uint64 interestBP
+        ],
         value,
       });
       console.log(
@@ -309,14 +321,15 @@ export const useDepositLiquidity = () => {
       if (errorMessage.includes("execution reverted")) {
         console.error("❌ Contract execution reverted. Possible reasons:", {
           reasons: [
-            "1. Loan ID doesn't exist",
-            "2. Token not supported by contract",
-            "3. Loan is not in correct state",
-            "4. Amount exceeds loan requirements",
+            "1. Token not supported by contract",
+            "2. Insufficient token balance",
+            "3. Insufficient allowance",
+            "4. Invalid lock duration",
+            "5. Invalid interest basis points",
           ],
         });
         toast.error(
-          "Transaction reverted. Check if loan ID exists and token is supported."
+          "Transaction reverted. Check if token is supported and parameters are valid."
         );
         return;
       }
@@ -325,9 +338,10 @@ export const useDepositLiquidity = () => {
         error,
         message: errorMessage,
         params: {
-          loanId: loanId.toString(),
           tokenAddress,
           amount: amount.toString(),
+          lockDurationMonths: lockDuration,
+          lockDurationSeconds: lockDurationSeconds.toString(),
           interestBP: interestBP.toString(),
         },
       });

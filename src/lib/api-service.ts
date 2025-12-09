@@ -237,7 +237,7 @@ class ApiService {
   getLoans = async () => {
     return this.request("GET", "/loan/user");
   };
-
+  
   getAllLoans = async () => {
     return this.request("GET", "/loan");
   };
